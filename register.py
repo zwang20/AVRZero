@@ -52,8 +52,14 @@ class PointerRegister(Register):
 
 class StatusRegister(Register):
 
-    BIT_NAMES = ["Carry flag", "Zero flag", "Negative flag", "Overflow flag",
-                 "Sign flag", "Half-carry flag", "Bit copy", "Interrupt flag"]
+    BIT_NAMES = (("C", "Carry flag"),
+                 ("Z", "Zero flag"),
+                 ("N", "Negative flag"), 
+                 ("O", "Overflow flag"),
+                 ("S", "Sign flag"), 
+                 ("H", "Half-carry flag"),
+                 ("T", "Bit copy"),
+                 ("I", "Interrupt flag"))
 
     @classmethod
     def from_(cls ,reg):
@@ -61,9 +67,11 @@ class StatusRegister(Register):
         return reg
 
 
-for i, name in enumerate(StatusRegister.BIT_NAMES):
-    char_name = name[0]
-    setattr(StatusRegister, char_name, property(
+for i, (abbr, name) in enumerate(StatusRegister.BIT_NAMES):
+    prop = property(
         lambda r, n=i: r.get_bit(n),
         lambda r, b, n=i: r.set_bit(n, b)
-    ))
+        )
+    name = name.lower().translate({" ": "_", "-": "_"})
+    setattr(StatusRegister, abbr, prop)
+    setattr(StatusRegister, name, prop)
