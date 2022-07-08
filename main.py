@@ -3,5 +3,5 @@ from machine import Machine
 
 machine = Machine()
 print(machine)
-adc(machine, 10, 11)
+adc(machine, 0, 1)
 print(machine)
