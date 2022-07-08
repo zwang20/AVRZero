@@ -37,7 +37,7 @@ class PointerRegister(Register):
     def __init__(self, pair=None):
         self.addr = (r.addr for r in pair)
         self._pair = pair
-    
+
     @property
     def val(self):
         r1, r2 = self.pair
@@ -50,29 +50,20 @@ class PointerRegister(Register):
         r2.val = val & ((1 << r2.N_BITS) - 1)
 
 
-class FlagRegister(Register):
+class StatusRegister(Register):
 
     BIT_NAMES = ["Carry flag", "Zero flag", "Negative flag", "Overflow flag",
                  "Sign flag", "Half-carry flag", "Bit copy", "Interrupt flag"]
 
-    def __init__(self, reg):
-        self.reg = reg
-
-    def __str__(self):
-        return str(self.reg)
-
-    @property
-    def val(self):
-        return self.reg.val
-
-    @val.setter
-    def val(self, val):
-        self.reg.val = val
+    @classmethod
+    def from_(cls ,reg):
+        reg.__class__ = cls
+        return reg
 
 
-for i, name in enumerate(FlagRegister.BIT_NAMES):
+for i, name in enumerate(StatusRegister.BIT_NAMES):
     char_name = name[0]
-    setattr(FlagRegister, char_name, property(
+    setattr(StatusRegister, char_name, property(
         lambda r, n=i: r.get_bit(n),
         lambda r, b, n=i: r.set_bit(n, b)
     ))

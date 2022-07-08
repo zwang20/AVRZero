@@ -1,4 +1,4 @@
-from register import Register, PointerRegister, FlagRegister
+from register import Register, PointerRegister, StatusRegister
 
 
 class Machine:
@@ -18,7 +18,7 @@ class Machine:
         # I/O registers
         self.IOR = self.io_registers = self.registers[0x20:0x60]
         self.SP = PointerRegister(self.registers[0x5E:0x5C:-1])
-        self.SREG = FlagRegister(self.registers[0x5F])
+        self.SREG = StatusRegister.from_(self.registers[0x5F])
 
         # Extended I/O registers
         self.ext_io = self.registers[0x0060:0x0100]
