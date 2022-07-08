@@ -40,12 +40,12 @@ class PointerRegister(Register):
 
     @property
     def val(self):
-        r1, r2 = self.pair
+        r1, r2 = self._pair
         return r1 << r2.N_BITS | r2
 
     @val.setter
     def val(self, val):
-        r1, r2 = self.pair
+        r1, r2 = self._pair
         r1.val = val >> r2.N_BITS
         r2.val = val & ((1 << r2.N_BITS) - 1)
 
