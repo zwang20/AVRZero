@@ -12,7 +12,11 @@ class Register:
         self._val = val
 
     def __str__(self):
-        return f"0x{self.addr:04X} : {self.val:0{self.N_BITS}b}"
+        if self.addr is None:
+            addr_str = "????"
+        else:
+            addr_str = f"{self.addr:04X}"
+        return f"0x{addr_str} : {self.val:0{self.N_BITS}b}"
 
     @property
     def val(self):
