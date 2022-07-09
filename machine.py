@@ -28,5 +28,8 @@ class Machine:
         lines.append("=" * 80)
         lines.extend(map(str, self.R))
         lines.append(f"{self.SREG} SREG")
+        lines.append(f"{self.X} X")
+        lines.append(f"{self.Y} Y")
+        lines.append(f"{self.Z} Z")
         lines.append("=" * 80)
         return "\n".join(lines)

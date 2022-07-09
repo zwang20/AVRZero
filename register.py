@@ -43,6 +43,10 @@ class PointerRegister(Register):
         self.addr = (r.addr for r in pair)
         self._pair = pair
 
+    def __str__(self):
+        r1, r2 = self._pair
+        return f"0x{r1.addr:04X}:0x{r2.addr:04X} : {self.val:0{self.N_BITS}b}"
+
     @property
     def val(self):
         r1, r2 = self._pair
