@@ -27,12 +27,13 @@ class Register:
     def val(self, val):
         self._val = val % ((1 << self.N_BITS) - 1)
 
-    def get_bit(self, n):
-        return self.val & (1 << n)
+    def __getitem__(self, idx):
+        return self.val & (1 << idx)
 
-    def set_bit(self, n, b):
-        self.val &= ~(1 << n)
-        self.val |= b << n
+    def __setitem__(self, idx, bit):
+        bit = 1 if bit else 0
+        self.val &= ~(1 << idx)
+        self.val |= bit << idx
 
 
 class PointerRegister(Register):
@@ -78,8 +79,8 @@ class StatusRegister(Register):
 
 for i, (abbr, name) in enumerate(StatusRegister.BIT_NAMES):
     prop = property(
-        lambda r, n=i: r.get_bit(n),
-        lambda r, b, n=i: r.set_bit(n, b)
+        lambda r, n=i: r.__getitem__(n),
+        lambda r, b, n=i: r.__setitem__(n, b)
         )
     name = name.lower().translate({" ": "_", "-": "_"})
     setattr(StatusRegister, abbr, prop)
