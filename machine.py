@@ -30,4 +30,3 @@ class Machine:
         lines.append(f"{self.SREG} SREG")
         lines.append("=" * 80)
         return "\n".join(lines)
-

@@ -54,9 +54,9 @@ class StatusRegister(Register):
 
     BIT_NAMES = (("C", "Carry flag"),
                  ("Z", "Zero flag"),
-                 ("N", "Negative flag"), 
+                 ("N", "Negative flag"),
                  ("O", "Overflow flag"),
-                 ("S", "Sign flag"), 
+                 ("S", "Sign flag"),
                  ("H", "Half-carry flag"),
                  ("T", "Bit copy"),
                  ("I", "Interrupt flag"))
