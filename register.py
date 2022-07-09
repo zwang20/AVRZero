@@ -46,7 +46,7 @@ class PointerRegister(Register):
     @property
     def val(self):
         r1, r2 = self._pair
-        return r1 << r2.N_BITS | r2
+        return r1.val << r2.N_BITS | r2.val
 
     @val.setter
     def val(self, val):
