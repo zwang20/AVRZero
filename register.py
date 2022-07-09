@@ -4,6 +4,7 @@ from random import randint
 class Register:
 
     N_BITS = 8
+    MAX_VAL = 1 << N_BITS
 
     def __init__(self, addr, val=None):
         self.addr = addr
