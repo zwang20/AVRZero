@@ -11,5 +11,5 @@ def adc(machine, d, r):
     SREG.S = SREG.N ^ SREG.V
     SREG.N = R[7]
     SREG.Z = not R
-    SREG.H = Rd[7] and Rr[7] or Rr[7] and not R[7] or not R[7] and Rd[7]
+    SREG.C = Rd[7] and Rr[7] or Rr[7] and not R[7] or not R[7] and Rd[7]
     Rd.val = R.val
