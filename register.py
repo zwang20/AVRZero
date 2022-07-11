@@ -27,7 +27,7 @@ class Register:
         self._val = val % (1 << self.N_BITS)
 
     def __getitem__(self, idx):
-        return self.val & (1 << idx)
+        return (self.val & (1 << idx)) >> idx
 
     def __setitem__(self, idx, bit):
         bit = 1 if bit else 0
