@@ -4,9 +4,8 @@ from random import randint
 class Register:
 
     N_BITS = 8
-    MAX_VAL = 1 << N_BITS
 
-    def __init__(self, addr, val=None):
+    def __init__(self, addr=None, val=None):
         self.addr = addr
         if val is None:
             val = randint(0, (1 << self.N_BITS) - 1)
