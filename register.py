@@ -4,13 +4,12 @@ from random import randint
 class Register:
 
     N_BITS = 8
-    MAX_VAL = 1 << N_BITS
 
-    def __init__(self, addr, val=None):
+    def __init__(self, addr=None, val=None):
         self.addr = addr
         if val is None:
             val = randint(0, (1 << self.N_BITS) - 1)
-        self._val = val
+        self.val = val
 
     def __str__(self):
         if self.addr is None:
@@ -25,14 +24,15 @@ class Register:
 
     @val.setter
     def val(self, val):
-        self._val = val % ((1 << self.N_BITS) - 1)
+        self._val = val % (1 << self.N_BITS)
 
-    def get_bit(self, n):
-        return self.val & (1 << n)
+    def __getitem__(self, idx):
+        return self.val & (1 << idx)
 
-    def set_bit(self, n, b):
-        self.val &= ~(1 << n)
-        self.val |= b << n
+    def __setitem__(self, idx, bit):
+        bit = 1 if bit else 0
+        self.val &= ~(1 << idx)
+        self.val |= bit << idx
 
 
 class PointerRegister(Register):
@@ -78,8 +78,8 @@ class StatusRegister(Register):
 
 for i, (abbr, name) in enumerate(StatusRegister.BIT_NAMES):
     prop = property(
-        lambda r, n=i: r.get_bit(n),
-        lambda r, b, n=i: r.set_bit(n, b)
+        lambda r, n=i: r.__getitem__(n),
+        lambda r, b, n=i: r.__setitem__(n, b)
         )
     name = name.lower().translate({" ": "_", "-": "_"})
     setattr(StatusRegister, abbr, prop)

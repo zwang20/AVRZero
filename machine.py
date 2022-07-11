@@ -7,7 +7,7 @@ class Machine:
         self.RAMEND = RAMEND
         self.registers = [Register(addr) for addr in range(RAMEND)]
 
-        self.PC = PointerRegister((Register(None), Register(None)))
+        self.PC = PointerRegister((Register(), Register()))
 
         # general purpose registers
         self.R = self.general_registers = self.registers[0x00:0x20]
