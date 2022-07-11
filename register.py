@@ -10,7 +10,7 @@ class Register:
         self.addr = addr
         if val is None:
             val = randint(0, (1 << self.N_BITS) - 1)
-        self._val = val
+        self.val = val
 
     def __str__(self):
         if self.addr is None:
@@ -25,7 +25,7 @@ class Register:
 
     @val.setter
     def val(self, val):
-        self._val = val % ((1 << self.N_BITS) - 1)
+        self._val = val % (1 << self.N_BITS)
 
     def __getitem__(self, idx):
         return self.val & (1 << idx)
