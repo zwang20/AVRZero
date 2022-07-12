@@ -23,6 +23,9 @@ class Machine:
         # Extended I/O registers
         self.ext_io = self.registers[0x0060:0x0100]
 
+    def __repr__(self):
+        return f"Machine(RAMEND={self.RAMEND})"
+
     def __str__(self):
         lines = []
         lines.append("=" * 80)
