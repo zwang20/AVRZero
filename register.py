@@ -11,12 +11,21 @@ class Register:
             val = randint(0, (1 << self.N_BITS) - 1)
         self.val = val
 
-    def __str__(self):
+    def __repr__(self):
         if self.addr is None:
-            addr_str = "????"
+            return f"Register(val={self.val:0{self.N_BITS}b})"
         else:
-            addr_str = f"{self.addr:04X}"
-        return f"0x{addr_str} : {self.val:0{self.N_BITS}b}"
+            return f"Register({self.addr_str}, {self.val:0{self.N_BITS}b})"
+
+    def __str__(self):
+        return f"{self.addr_str} -> {self.val:0{self.N_BITS}b}"
+
+    @property
+    def addr_str(self):
+        if self.addr is None:
+            return "0x????"
+        else:
+            return f"0x{self.addr:04X}"
 
     @property
     def val(self):
@@ -27,7 +36,7 @@ class Register:
         self._val = val % (1 << self.N_BITS)
 
     def __getitem__(self, idx):
-        return self.val & (1 << idx)
+        return (self.val & (1 << idx)) >> idx
 
     def __setitem__(self, idx, bit):
         bit = 1 if bit else 0
@@ -43,9 +52,14 @@ class PointerRegister(Register):
         self.addr = (r.addr for r in pair)
         self._pair = pair
 
-    def __str__(self):
+    def __repr__(self):
         r1, r2 = self._pair
-        return f"0x{r1.addr:04X}:0x{r2.addr:04X} : {self.val:0{self.N_BITS}b}"
+        return f"PointerRegister([{r1!r}, {r2!r}])"
+
+    @property
+    def addr_str(self):
+        r1, r2 = self._pair
+        return f"{r1.addr_str}:{r2.addr_str}"
 
     @property
     def val(self):
