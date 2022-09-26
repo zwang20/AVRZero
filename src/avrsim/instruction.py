@@ -1,6 +1,43 @@
 from avrsim.register import Register
 
 
+class Instruction:
+
+    def __init__(self, action, syntax, limits, opcode):
+        self.action = action
+        self.syntax = syntax
+        self.limits = limits
+        self.opcode = opcode
+
+    @classmethod
+    def make(cls, syntax, limits, opcode, belong_to=None):
+        def decorator(action):
+            instruciton = cls(action, syntax, limits, opcode)
+            if belong_to is None:
+                InstructionSet.default.instructions.append(instruciton)
+            else:
+                belong_to.instructions.append(instruction)
+
+        return decorator
+
+
+class InstructionSet:
+
+    default = None
+
+    def __init__(self):
+        self.instructions = []
+
+
+# default instruction set
+InstructionSet.default = InstructionSet()
+
+
+@Instruction.make(
+    syntax="ADC Rd, Rr",
+    limits={"d": range(0, 32), "r": range(0, 32)},
+    opcode="0001 11rd dddd rrrr"
+)
 def adc(machine, d, r):
     Rd, Rr = machine.R[d], machine.R[r]
     SREG = machine.SREG
