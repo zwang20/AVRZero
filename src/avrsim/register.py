@@ -91,10 +91,8 @@ class StatusRegister(Register):
 
 
 for i, (abbr, name) in enumerate(StatusRegister.BIT_NAMES):
-    prop = property(
-        lambda r, n=i: r.__getitem__(n),
-        lambda r, b, n=i: r.__setitem__(n, b)
-        )
+    prop = property(lambda r, n=i: r.__getitem__(n),
+                    lambda r, b, n=i: r.__setitem__(n, b))
     name = name.lower().translate({" ": "_", "-": "_"})
     setattr(StatusRegister, abbr, prop)
     setattr(StatusRegister, name, prop)

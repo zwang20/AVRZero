@@ -1,4 +1,4 @@
-from register import Register, PointerRegister, StatusRegister
+from avrsim.register import Register, PointerRegister, StatusRegister
 
 
 class Machine:
@@ -49,5 +49,5 @@ class Machine:
         self.SP.val = self.RAMEND
 
     def load_program(self, program):
-        program = program[:len(flash)]
+        program = program[:len(self.flash)]
         self.flash[:len(program)] = program

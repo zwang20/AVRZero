@@ -1,4 +1,4 @@
-from register import Register
+from avrsim.register import Register
 
 
 def adc(machine, d, r):
