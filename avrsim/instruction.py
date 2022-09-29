@@ -336,6 +336,7 @@ def adc(machine, d, r):
     SREG.C = Rd[7] and Rr[7] or Rr[7] and not R[7] or not R[7] and Rd[7]
     Rd.val = val
 
+    machine.PC.val += 1
 
 @Instruction.make(
     syntax="BCLR s",
@@ -344,6 +345,7 @@ def adc(machine, d, r):
 )
 def bclr(machine, s):
     machine.SREG[s] = 0
+    machine.PC.val += 1
 
 @Instruction.make(
     syntax="CALL k",
