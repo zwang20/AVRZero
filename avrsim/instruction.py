@@ -123,6 +123,10 @@ class Opcode:
         return set(self._str) - {"0", "1"}
 
     @cached_property
+    def n_bits(self):
+        return len(self._str)
+
+    @cached_property
     def fixed_mask(self):
         return self.binary_mask(self._str, "01")
 
@@ -139,7 +143,11 @@ class Opcode:
         for key, val in operand_map.items():
             mapped |= self.map_int(val, self.mask_char(key))
 
-        return mapped
+        codes = []
+        for _ in range(self.n_bits // N_BITS):
+            codes.insert(0, mapped & ((1 << BYTE_SIZE) - 1))
+            mapped >>= BYTE_SIZE
+        return codes
 
     @staticmethod
     def binary_mask(code, select):
@@ -265,9 +273,14 @@ class InstructionSet:
             if instruction.name.casefold() == name.casefold():
                 return instruction
 
-    def by_opcode(self, code):
+    def by_opcode(self, codes):
+        opcode = 0
+        for code in codes:
+            opcode <<= BYTE_SIZE
+            opcode |= code
         for instruction in self._instructions:
-            if instruction.opcode.fixed_mask & code == instruction.opcode.fixed:
+            if instruction.opcode.fixed_mask & opcode == \
+                    instruction.opcode.fixed:
                 return instruction
 
 
@@ -301,3 +314,13 @@ def adc(machine, d, r):
 )
 def bclr(machine, s):
     machine.SREG[s] = 0
+
+@Instruction.make(
+    syntax="CALL k",
+    operands=(Operand("k", range(0, 64_000)),),
+    opcode="1001" "010k" "kkkk" "111k"
+    "kkkk" "kkkk" "kkkk" "kkkk"
+)
+def call(machine, k):
+    # machine.push(PC + 2)
+    machine.SP.val = machine.SP.val - 2
