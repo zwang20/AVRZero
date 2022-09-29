@@ -8,7 +8,7 @@ push r19
 push r20
 
 push r20
-cal 14 ; [ref] times two
+call 14 ; [ref] times two
 pop r21
 
 pop r20
