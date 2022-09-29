@@ -337,7 +337,28 @@ def adc(machine, d, r):
     val = Rd.val + Rr.val + SREG.C
     SREG.H = Rd[3] and Rr[3] or Rr[3] and not R[3] and not R[3] and Rd[3]
     SREG.V = Rd[7] and Rr[7] and not R[7] or not Rd[7] and not Rr[7] and R[7]
-    SREG.S = SREG.N ^ SREG.V
+    SREG.S = SREG.N != SREG.V
+    SREG.N = R[7]
+    SREG.Z = not R
+    SREG.C = Rd[7] and Rr[7] or Rr[7] and not R[7] or not R[7] and Rd[7]
+    Rd.val = val
+
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="ADD Rd, Rr",
+    operands=(Operand("d", range(0, 32)),
+              Operand("r", range(0, 32))),
+    opcode="0000" "11rd" "dddd" "rrrr"
+)
+def add(machine, d, r):
+    Rd, Rr = machine.R[d], machine.R[r]
+    SREG = machine.SREG
+
+    val = Rd.val + Rr.val + SREG.C
+    SREG.H = Rd[3] and Rr[3] or Rr[3] and not R[3] and not R[3] and Rd[3]
+    SREG.V = Rd[7] and Rr[7] and not R[7] or not Rd[7] and not Rr[7] and R[7]
+    SREG.S = SREG.N != SREG.V
     SREG.N = R[7]
     SREG.Z = not R
     SREG.C = Rd[7] and Rr[7] or Rr[7] and not R[7] or not R[7] and Rd[7]
@@ -390,3 +411,39 @@ def ld_post_inc(machine, d):
 def ld_pre_dec(machine, d):
     machine.X.val -= 1
     machine.R[d].val = machine.R[machine.X.val].val
+
+@Instruction.make(
+    syntax="LDI Rd, k",
+    operands=(Operand("d", range(16, 32)),
+              Operand("k", range(0, 256))),
+    opcode="1110" "kkkk" "dddd" "kkkk"
+)
+def ldi(machine, d, k):
+    machine.R[d].val = k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="POP Rd",
+    operands=(Operand("d", range(0, 32)),),
+    opcode="1001" "000d" "dddd" "1111"
+)
+def pop(machine, d):
+    machine.R[d].val = machine.pop_stack()
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="PUSH Rd",
+    operands=(Operand("d", range(0, 32)),),
+    opcode="1001" "001d" "dddd" "1111"
+)
+def push(machine, d):
+    machine.push_stack(machine.R[d].val)
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="RET",
+    operands=(),
+    opcode="1001" "0101" "0000" "1000"
+)
+def ret(machine):
+    machine.PC.val = machine.pop_stack(2)
