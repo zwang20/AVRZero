@@ -58,12 +58,24 @@ class Syntax:
                     for operand in operands:
                         if operand.name == char:
                             tokens.append(operand)
+                            break
+                    else:
+                        raise ValueError(
+                            f"{char} in syntax, but not in operands"
+                        )
                 if char.isspace():
                     tokens.append(" ")
                 elif char == ",":
                     tokens.append(",")
             else:
                 raise ValueError("invalid character in syntax")
+
+        missing = set(operands) \
+                - set(filter(lambda obj: isinstance(obj, Operand), tokens))
+        if missing:
+            missing_names = ", ".join(map(lambda operand: operand.name,
+                                          missing))
+            raise ValueError(f"{missing_names} in operands, but not in syntax")
 
         return cls(tokens)
 
@@ -73,6 +85,8 @@ class Operand:
     def __init__(self, name, choices):
         if not isinstance(name, str):
             raise TypeError("invalid type for name, expect str")
+        if len(name) != 1:
+            raise ValueError("invalid length for name, expect 1")
         if isinstance(choices, range):
             if choices.step != 1:
                 raise ValueError("invalid step for choices, expect 1")
@@ -174,6 +188,13 @@ class Opcode:
     @classmethod
     def parse(cls, opcode_str, operands):
         opcode = cls(opcode_str)
+        operand_names = set(operand.name for operand in operands)
+        missing_names = opcode.operand_names - operand_names
+        if missing_names:
+            raise ValueError(f"{missing_names} in opcode, but not in operands")
+        missing_names = operand_names - opcode.operand_names
+        if missing_names:
+            raise ValueError(f"{missing_names} in operands, but not in opcode")
         return opcode
 
 
@@ -234,6 +255,13 @@ class Instruction:
 
     @classmethod
     def make(cls, syntax, operands, opcode, belong_to=None):
+        seen_operand_names = []
+        for operand in operands:
+            if operand.name in seen_operand_names:
+                raise ValueError("duplicate operand names")
+            else:
+                seen_operand_names.append(operand.name)
+
         def decorator(action):
             instruction = cls(action,
                               Syntax.parse(syntax, operands),
