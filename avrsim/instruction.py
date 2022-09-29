@@ -1,5 +1,7 @@
 from functools import cache, cached_property
 
+from avrsim.error import AVRSyntaxError
+
 
 N_BITS = 8
 
@@ -28,16 +30,16 @@ class Syntax:
                     num_str += string[0]
                     string = string[1:]
                 if not num_str:
-                    raise Exception("expect digits")
+                    raise AVRSyntaxError("expect digits")
                 operand_map[token.name] = int(num_str)
             elif token == " ":
                 if not string or not string[0].isspace():
-                    return Exception("expect space")
+                    return AVRSyntaxError("expect space")
                 string = string.lstrip()
             else:
-                if not string.startswith(token):
-                    return Exception(f"expect {token}")
-                string = string.removeprefix(token)
+                if not string.lower().startswith(token.lower()):
+                    return AVRSyntaxError(f"expect {token}")
+                string = string[len(token):]
 
         return operand_map
 
@@ -218,7 +220,7 @@ class Instruction:
         operand_map = self._syntax.match(string)
         for operand in self._operands:
             if not operand.check(operand_map[operand.name]):
-                raise Exception("invalid operand")
+                raise AVRSyntaxError("invalid operand")
 
         return self._opcode.map_operands(operand_map)
 

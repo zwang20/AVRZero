@@ -1,0 +1,2 @@
+class AVRSyntaxError(Exception):
+    pass

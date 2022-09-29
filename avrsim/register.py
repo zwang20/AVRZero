@@ -1,5 +1,5 @@
 from random import randint
-from instruction import N_BITS
+from avrsim.instruction import N_BITS
 
 
 class Register:

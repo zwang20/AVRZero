@@ -1,3 +1,4 @@
+from avrsim.instruction import InstructionSet
 from avrsim.register import Register, PointerRegister, StatusRegister
 
 
