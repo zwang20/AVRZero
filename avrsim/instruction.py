@@ -4,6 +4,7 @@ from avrsim.error import AVRSyntaxError
 
 
 BYTE_SIZE = 8
+WORD_SIZE = 16
 
 
 class Syntax:
@@ -166,8 +167,8 @@ class Opcode:
             mapped |= self.map_int(val, self.mask_char(key))
 
         codes = []
-        for _ in range(self.n_bits // BYTE_SIZE):
-            codes.insert(0, mapped & ((1 << BYTE_SIZE) - 1))
+        for _ in range(self.n_bits // WORD_SIZE):
+            codes.insert(0, mapped & ((1 << WORD_SIZE) - 1))
             mapped >>= BYTE_SIZE
         return codes
 
