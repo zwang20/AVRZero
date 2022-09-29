@@ -38,12 +38,15 @@ class Syntax:
                 operand_map[token.name] = int(num_str)
             elif token == " ":
                 if not string or not string[0].isspace():
-                    return AVRSyntaxError("expect space")
+                    raise AVRSyntaxError("expect space")
                 string = string.lstrip()
             else:
                 if not string.lower().startswith(token.lower()):
-                    return AVRSyntaxError(f"expect {token}")
+                    raise AVRSyntaxError(f"expect {token!r}")
                 string = string[len(token):]
+
+        if string and not string.isspace():
+            raise AVRSyntaxError(f"unexpected {string!r}")
 
         return operand_map
 
@@ -71,6 +74,9 @@ class Syntax:
                     tokens.append(" ")
                 else:
                     tokens.append(char)
+
+        if token:
+            tokens.append(token)
 
         missing = set(operands) \
                 - set(filter(lambda obj: isinstance(obj, Operand), tokens))
