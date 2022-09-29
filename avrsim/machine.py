@@ -54,9 +54,9 @@ class Machine:
 
     def reset(self):
         self.SP.val = self.RAMEND
-        self.PC.val = 0
+        self.PC.val = 0x0000
 
     def load_program(self, program):
-        self.flash = [0] * len(self.flash)
+        self.flash[:] = [0x00] * len(self.flash)
         program = program[:len(self.flash)]
         self.flash[:len(program)] = program

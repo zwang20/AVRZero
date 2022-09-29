@@ -3,7 +3,7 @@ from functools import cache, cached_property
 from avrsim.error import AVRSyntaxError
 
 
-N_BITS = 8
+BYTE_SIZE = 8
 
 
 class Syntax:
@@ -110,9 +110,9 @@ class Opcode:
     def __init__(self, opcode_str):
         if not isinstance(opcode_str, str):
             raise TypeError("invalid type for operand str, expect str")
-        if len(opcode_str) % N_BITS:
+        if len(opcode_str) % BYTE_SIZE:
             raise ValueError("invalid length for operand str, "
-                             f"expect multiple of {N_BITS}")
+                             f"expect multiple of {BYTE_SIZE}")
         self._str = opcode_str
 
     def __str__(self):
@@ -144,7 +144,7 @@ class Opcode:
             mapped |= self.map_int(val, self.mask_char(key))
 
         codes = []
-        for _ in range(self.n_bits // N_BITS):
+        for _ in range(self.n_bits // BYTE_SIZE):
             codes.insert(0, mapped & ((1 << BYTE_SIZE) - 1))
             mapped >>= BYTE_SIZE
         return codes
