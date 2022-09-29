@@ -21,6 +21,10 @@ class Syntax:
 
         return string
 
+    @cached_property
+    def name(self):
+        return self._tokens[0]
+
     def match(self, string):
         operand_map = {}
         for token in self._tokens:
@@ -241,7 +245,7 @@ class Instruction:
 
     @cached_property
     def name(self):
-        return self._action.__qualname__
+        return self.syntax.name
 
     def str_to_opcode(self, string):
         operand_map = self._syntax.match(string)
@@ -297,7 +301,7 @@ class InstructionSet:
     def by_name(self, name):
         for instruction in self._instructions:
             if instruction.name.casefold() == name.casefold():
-                return instruction
+                yield instruction
 
     def by_opcode(self, codes):
         opcode = 0
@@ -351,3 +355,29 @@ def call(machine, k):
     machine.push_stack(PC.val + 2, 2)
     machine.SP.val = machine.SP.val - 2
     machine.PC.val = k
+
+@Instruction.make(
+    syntax="LD Rd, X",
+    operands=(Operand("d", range(0, 32)),),
+    opcode="1001" "000d" "dddd" "1100"
+)
+def ld(machine, d):
+    machine.R[d].val = machine.R[machine.X.val].val
+
+@Instruction.make(
+    syntax="LD Rd, X+",
+    operands=(Operand("d", range(0, 32)),),
+    opcode="1001" "000d" "dddd" "1101"
+)
+def ld_post_inc(machine, d):
+    machine.R[d].val = machine.R[machine.X.val].val
+    machine.X.val += 1
+
+@Instruction.make(
+    syntax="LD Rd, -X",
+    operands=(Operand("d", range(0, 32)),),
+    opcode="1001" "000d" "dddd" "1110"
+)
+def ld_pre_dec(machine, d):
+    machine.X.val -= 1
+    machine.R[d].val = machine.R[machine.X.val].val
