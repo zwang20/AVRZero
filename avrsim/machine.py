@@ -1,4 +1,4 @@
-from avrsim.instruction import InstructionSet
+from avrsim.instruction import BYTE_SIZE, InstructionSet
 from avrsim.register import Register, PointerRegister, StatusRegister
 
 
@@ -8,21 +8,21 @@ class Machine:
                  instruction_set=InstructionSet.default):
         # === Data Memory ===
         self.RAMEND = RAMEND
-        self.registers = [Register(addr) for addr in range(RAMEND + 1)]
+        self.memory = [Register(addr) for addr in range(RAMEND + 1)]
 
         # general purpose registers
-        self.R = self.general_registers = self.registers[0x00:0x20]
-        self.X = PointerRegister(self.registers[27:25:-1])
-        self.Y = PointerRegister(self.registers[29:27:-1])
-        self.Z = PointerRegister(self.registers[31:29:-1])
+        self.R = self.general_registers = self.memory[0x00:0x20]
+        self.X = PointerRegister(self.memory[27:25:-1])
+        self.Y = PointerRegister(self.memory[29:27:-1])
+        self.Z = PointerRegister(self.memory[31:29:-1])
 
         # I/O registers
-        self.IOR = self.io_registers = self.registers[0x20:0x60]
-        self.SP = PointerRegister(self.registers[0x5E:0x5C:-1])
-        self.SREG = StatusRegister.from_(self.registers[0x5F])
+        self.IOR = self.io_registers = self.memory[0x20:0x60]
+        self.SP = PointerRegister(self.memory[0x5E:0x5C:-1])
+        self.SREG = StatusRegister.from_(self.memory[0x5F])
 
         # extended I/O registers
-        self.EIOR = self.ext_io_registers = self.registers[0x0060:0x0100]
+        self.EIOR = self.ext_io_registers = self.memory[0x0060:0x0100]
 
         # === Program Memory ===
         self.flash_size = flash_size
@@ -39,7 +39,7 @@ class Machine:
     def __repr__(self):
         return "\n".join((
             f"Machine(RAMEND={self.RAMEND},",
-            f"        flash_size={self.flash_size},"
+            f"        flash_size={self.flash_size},",
             f"        instruction_set={self.instruction_set!r})"))
 
     def __str__(self):
@@ -51,6 +51,28 @@ class Machine:
         lines.append(f"{self.Z} Z")
         lines.append("=" * 80)
         return "\n".join(lines)
+
+    def _push_stack(self, val):
+        self.SP.val -= 1
+        self.memory[self.SP.val] = val
+
+    def _pop_stack(self):
+        val = self.memory[self.SP.val]
+        self.SP.val += 1
+        return val
+
+    def push_stack(self, val, n_byte=1):
+        for _ in range(n_byte):
+            self._push_stack(val & ((1 << BYTE_SIZE) - 1))
+            val >>= BYTE_SIZE
+
+    def pop_stack(self, n_byte=1):
+        val = 0
+        for _ in range(n_byte):
+            val <<= BYTE_SIZE
+            val |= self._pop_stack()
+
+        return val
 
     def reset(self):
         self.SP.val = self.RAMEND

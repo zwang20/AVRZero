@@ -350,5 +350,6 @@ def bclr(machine, s):
     "kkkk" "kkkk" "kkkk" "kkkk"
 )
 def call(machine, k):
-    # machine.push(PC + 2)
+    machine.push_stack(PC.val + 2, 2)
     machine.SP.val = machine.SP.val - 2
+    machine.PC.val = k
