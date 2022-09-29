@@ -1,9 +1,10 @@
 from random import randint
+from instruction import N_BITS
 
 
 class Register:
 
-    N_BITS = 8
+    N_BITS = N_BITS
 
     def __init__(self, addr=None, val=None):
         self.addr = addr
@@ -46,15 +47,20 @@ class Register:
 
 class PointerRegister(Register):
 
-    N_BITS = Register.N_BITS * 2
+    N_BITS = N_BITS * 2
 
     def __init__(self, pair=None):
-        self.addr = (r.addr for r in pair)
+        pair = tuple(pair)
+        self._addr = (r.addr for r in pair)
         self._pair = pair
 
     def __repr__(self):
         r1, r2 = self._pair
         return f"PointerRegister([{r1!r}, {r2!r}])"
+
+    @property
+    def addr(self):
+        return self._addr
 
     @property
     def addr_str(self):

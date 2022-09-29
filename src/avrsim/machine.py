@@ -3,7 +3,8 @@ from avrsim.register import Register, PointerRegister, StatusRegister
 
 class Machine:
 
-    def __init__(self, RAMEND=0xFFFF, flash_size=0x10000):
+    def __init__(self, RAMEND=0xFFFF, flash_size=0x10000,
+                 instruction_set=InstructionSet.default):
         # === Data Memory ===
         self.RAMEND = RAMEND
         self.registers = [Register(addr) for addr in range(RAMEND + 1)]
@@ -28,15 +29,20 @@ class Machine:
 
         self.PC = PointerRegister((Register(), Register()))
 
+        # === Instruction Set ===
+        self.instruction_set = instruction_set
+
         # === Reset ===
         self.reset()
 
     def __repr__(self):
-        return f"Machine(RAMEND={self.RAMEND})"
+        return "\n".join((
+            f"Machine(RAMEND={self.RAMEND},",
+            f"        flash_size={self.flash_size},"
+            f"        instruction_set={self.instruction_set!r})"))
 
     def __str__(self):
-        lines = []
-        lines.append("=" * 80)
+        lines = ["=" * 80]
         lines.extend(map(str, self.R))
         lines.append(f"{self.SREG} SREG")
         lines.append(f"{self.X} X")
@@ -47,7 +53,9 @@ class Machine:
 
     def reset(self):
         self.SP.val = self.RAMEND
+        self.PC.val = 0
 
     def load_program(self, program):
+        self.flash = [0] * len(self.flash)
         program = program[:len(self.flash)]
         self.flash[:len(program)] = program
