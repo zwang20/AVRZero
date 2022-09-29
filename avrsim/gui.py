@@ -9,6 +9,7 @@ class CodeText(tk.Text):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tag_configure(f"error", background="red")
+        self.tag_lower(f"error")
 
 
 class RegisterFrame(tk.Frame):
@@ -46,14 +47,26 @@ class MachineFrame(tk.Frame):
             widget.refresh()
 
 
+
+
 def assemble(txt_code):
     assembler = Assembler(txt_code.get("0.0", tk.END))
     program = assembler.assemble()
-    txt_code.tag_remove("error", "1.0", "end")
+    for tag_name in txt_code.tag_names():
+        if tag_name.startswith("E"):
+            txt_code.tag_remove(tag_name, "1.0", "end")
     if assembler.errors:
         for line_no, err in assembler.errors:
-            txt_code.tag_add("error",
+            lab_err = tk.Label(text=err)
+
+            tag_name = f"E{line_no}"
+            txt_code.tag_add(tag_name,
                              f"{line_no + 1}.0", f"{line_no + 1}.end")
+            txt_code.tag_configure(tag_name, background="red")
+            txt_code.tag_bind(tag_name, "<Enter>",
+                              lambda event: lab_err.place(x=event.x, y=event.y))
+            txt_code.tag_bind(tag_name, "<Leave>",
+                              lambda event: lab_err.place_forget())
 
 
 def main():
