@@ -50,7 +50,7 @@ class Syntax:
         for char in string:
             if char.isupper():
                 token += char
-            elif char.islower() or char.isspace() or char == ",":
+            else:
                 if token:
                     tokens.append(token)
                     token = ""
@@ -63,12 +63,10 @@ class Syntax:
                         raise ValueError(
                             f"{char} in syntax, but not in operands"
                         )
-                if char.isspace():
+                elif char.isspace():
                     tokens.append(" ")
-                elif char == ",":
-                    tokens.append(",")
-            else:
-                raise ValueError("invalid character in syntax")
+                else:
+                    tokens.append(char)
 
         missing = set(operands) \
                 - set(filter(lambda obj: isinstance(obj, Operand), tokens))
