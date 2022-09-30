@@ -172,6 +172,18 @@ class Opcode:
             mapped >>= WORD_SIZE
         return codes
 
+    def get_operands(self, codes):
+        mapped = 0
+        for _ in range(self.n_bits // WORD_SIZE):
+            mapped <<= WORD_SIZE
+            mapped |= codes.pop(0)
+
+        operand_map = {}
+        for key in self.operand_names:
+            operand_map[key] = self.get_int(mapped, self.mask_char(key))
+
+        return operand_map
+
     @staticmethod
     def binary_mask(code, select):
         mask = 0
@@ -193,6 +205,20 @@ class Opcode:
             weight += 1
 
         return mapped
+
+    @staticmethod
+    def get_int(mapped, mask):
+        bit_len = mask.bit_length() - 1
+        integer = 0
+        weight = 0
+        while bit_len >= 0:
+            if mask & (1 << bit_len):
+                integer <<= 1
+                if mapped & (1 << bit_len):
+                    integer |= 1
+            bit_len -= 1
+
+        return integer
 
     @classmethod
     def parse(cls, opcode_str, operands):
@@ -419,6 +445,14 @@ def ld_pre_dec(machine, d):
 )
 def ldi(machine, d, k):
     machine.R[d].val = k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="NOP",
+    operands=(),
+    opcode="0000" "0000" "0000" "0000"
+)
+def nop(machine):
     machine.PC.val += 1
 
 @Instruction.make(

@@ -133,7 +133,10 @@ class AVRSimTk(tk.Tk):
 
         self.btn_assemble = tk.Button(
             self.frm_toolbar, text="Assemble", command=self.assemble)
-        self.btn_assemble.pack()
+        self.btn_assemble.pack(side=tk.LEFT)
+        self.btn_step = tk.Button(
+            self.frm_toolbar, text="Step", command=self.step)
+        self.btn_step.pack(side=tk.RIGHT)
 
         self.txt_code = CodeText(self)
         self.txt_code.pack(fill=tk.BOTH, side=tk.LEFT)
@@ -197,6 +200,11 @@ class AVRSimTk(tk.Tk):
         else:
             self.machine.load_program(program)
             self.frm_flash.refresh()
+
+    def step(self):
+        self.machine.step()
+        self.frm_gpr.refresh()
+        self.frm_spr.refresh()
 
 
 if __name__ == "__main__":

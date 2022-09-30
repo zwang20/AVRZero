@@ -1,3 +1,4 @@
+from avrsim.error import AVRMachineError
 from avrsim.instruction import BYTE_SIZE, InstructionSet
 from avrsim.register import Register, PointerRegister, StatusRegister
 
@@ -82,3 +83,15 @@ class Machine:
         self.flash[:] = [0x00] * len(self.flash)
         program = program[:len(self.flash)]
         self.flash[:len(program)] = program
+
+    def step(self):
+        opcode = self.flash[self.PC.val:self.PC.val + 1]
+        instruction = self.instruction_set.by_opcode(opcode)
+        if instruction is None:
+            opcode = self.flash[self.PC.val:self.PC.val + 2]
+            instruction = self.instruction_set.by_opcode(opcode)
+        if instruction is None:
+            return
+        operand_map = instruction.opcode.get_operands(opcode)
+        print(instruction.name, operand_map)
+        instruction.action(self, **operand_map)
