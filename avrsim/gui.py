@@ -8,8 +8,25 @@ class CodeText(tk.Text):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.tag_configure(f"error", background="red")
-        self.tag_lower(f"error")
+        self.lab_err_ls = {}
+
+    def tag_error_clear(self):
+        for tag, lab in self.lab_err_ls.items():
+            self.tag_remove(tag, "0.0", "end")
+            lab.destroy()
+
+    def tag_error(self, line_no, err_str):
+        lab_err = tk.Label(text=err_str)
+        tag_name = f"E{line_no}"
+        self.tag_add(tag_name,
+                     f"{line_no + 1}.0", f"{line_no + 1}.end")
+        self.tag_configure(tag_name, background="red")
+        self.tag_bind(tag_name, "<Enter>",
+                      lambda event: lab_err.place(x=event.x, y=event.y))
+        self.tag_bind(tag_name, "<Leave>",
+                      lambda event: lab_err.place_forget())
+        self.tag_lower(tag_name)
+        self.lab_err_ls[tag_name] = lab_err
 
 
 class RegisterFrame(tk.Frame):
@@ -52,21 +69,10 @@ class MachineFrame(tk.Frame):
 def assemble(txt_code):
     assembler = Assembler(txt_code.get("0.0", tk.END))
     program = assembler.assemble()
-    for tag_name in txt_code.tag_names():
-        if tag_name.startswith("E"):
-            txt_code.tag_remove(tag_name, "1.0", "end")
+    txt_code.tag_error_clear()
     if assembler.errors:
         for line_no, err in assembler.errors:
-            lab_err = tk.Label(text=err)
-
-            tag_name = f"E{line_no}"
-            txt_code.tag_add(tag_name,
-                             f"{line_no + 1}.0", f"{line_no + 1}.end")
-            txt_code.tag_configure(tag_name, background="red")
-            txt_code.tag_bind(tag_name, "<Enter>",
-                              lambda event: lab_err.place(x=event.x, y=event.y))
-            txt_code.tag_bind(tag_name, "<Leave>",
-                              lambda event: lab_err.place_forget())
+            txt_code.tag_error(line_no, str(err))
 
 
 def main():
