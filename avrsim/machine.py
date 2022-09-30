@@ -92,6 +92,6 @@ class Machine:
             instruction = self.instruction_set.by_opcode(opcode)
         if instruction is None:
             return
-        operand_map = instruction.opcode.get_operands(opcode)
+        operand_map = instruction.opcode.get_operand_map(opcode)
         print(instruction.name, operand_map)
         instruction.action(self, **operand_map)

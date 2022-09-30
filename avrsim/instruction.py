@@ -112,9 +112,9 @@ class Operand:
     def name(self):
         return self._name
 
-    @property
+    @cached_property
     def choices(self):
-        return tuple(*self._choices)
+        return sorted(tuple(self._choices))
 
     def __str__(self):
         name = self._name
@@ -130,20 +130,17 @@ class Operand:
 
 class Opcode:
 
-    def __init__(self, opcode_str):
+    def __init__(self, opcode_str, operands):
         if not isinstance(opcode_str, str):
             raise TypeError("invalid type for operand str, expect str")
         if len(opcode_str) % BYTE_SIZE:
             raise ValueError("invalid length for operand str, "
                              f"expect multiple of {BYTE_SIZE}")
         self._str = opcode_str
+        self._operands = operands
 
     def __str__(self):
         return self._str
-
-    @cached_property
-    def operand_names(self):
-        return set(self._str) - {"0", "1"}
 
     @cached_property
     def n_bits(self):
@@ -163,7 +160,9 @@ class Opcode:
 
     def map_operands(self, operand_map):
         mapped = self.fixed
-        for key, val in operand_map.items():
+        for operand in self._operands:
+            key = operand.name
+            val = operand.choices.index(operand_map[key])
             mapped |= self.map_int(val, self.mask_char(key))
 
         codes = []
@@ -172,15 +171,17 @@ class Opcode:
             mapped >>= WORD_SIZE
         return codes
 
-    def get_operands(self, codes):
+    def get_operand_map(self, codes):
         mapped = 0
         for _ in range(self.n_bits // WORD_SIZE):
             mapped <<= WORD_SIZE
             mapped |= codes.pop(0)
 
         operand_map = {}
-        for key in self.operand_names:
-            operand_map[key] = self.get_int(mapped, self.mask_char(key))
+        for operand in self._operands:
+            key = operand.name
+            idx = self.get_int(mapped, self.mask_char(key))
+            operand_map[key] = operand.choices[idx]
 
         return operand_map
 
@@ -222,12 +223,13 @@ class Opcode:
 
     @classmethod
     def parse(cls, opcode_str, operands):
-        opcode = cls(opcode_str)
+        opcode = cls(opcode_str, operands)
         operand_names = set(operand.name for operand in operands)
-        missing_names = opcode.operand_names - operand_names
+        opcode_names = set(opcode._str) - {"0", "1"}
+        missing_names = opcode_names - operand_names
         if missing_names:
             raise ValueError(f"{missing_names} in opcode, but not in operands")
-        missing_names = operand_names - opcode.operand_names
+        missing_names = operand_names - opcode_names
         if missing_names:
             raise ValueError(f"{missing_names} in operands, but not in opcode")
         return opcode
