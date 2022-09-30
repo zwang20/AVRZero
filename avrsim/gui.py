@@ -1,3 +1,4 @@
+import math
 import tkinter.filedialog
 import tkinter as tk
 
@@ -35,111 +36,168 @@ class RegisterFrame(tk.Frame):
     def __init__(self, register, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._register = register
-        self.lab_addr = tk.Label(self)
-        self.lab_addr.pack()
+        self.lab_name = tk.Label(self)
+        self.lab_name.pack()
         self.ent_val = tk.Entry(self)
         self.ent_val.pack()
-        self.refresh()
+        self.ent_val.config(font="TkFixedFont")
 
-    def refresh(self):
-        self.lab_addr.config(text=self._register.addr_str)
+    def refresh(self, format_str):
+        self.lab_name.config(text=self._register.name)
         self.ent_val.delete(0, tk.END)
-        self.ent_val.insert(0, str(self._register.val))
+        self.ent_val.insert(0, format_str.format(self._register.val))
 
 
-class MachineFrame(tk.Frame):
+class FormatPickerFrame(tk.Frame):
 
-    def __init__(self, machine, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.format = tk.StringVar()
+        self._rad_ls = []
+        for text, value in (("binary", "{:016b}"),
+                            ("octal", "{:06o}"),
+                            ("decimal", "{:05d}"),
+                            ("hexadecimal", "{:04x}")):
+            rad = tk.Radiobutton(self, text=text, variable=self.format,
+                                 value=value, command=self.master.refresh)
+            rad.pack(side=tk.LEFT)
+            self._rad_ls.append(rad)
+        self._rad_ls[0].select()
+
+
+class RegisterFileFrame(tk.Frame):
+
+    def __init__(self, registers, n_rows, n_cols, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.frm_format_picker = FormatPickerFrame(self)
+        self.frm_format_picker.grid(row=0, columnspan=n_cols)
         widgets = []
-        for i in range(16):
-            for j in range(2):
-                widget = RegisterFrame(machine.R[i + 16 * j], self)
-                widget.grid(row=i, column=j)
+        for i in range(n_rows):
+            for j in range(n_cols):
+                widget = RegisterFrame(registers[i + n_rows * j], self)
+                widget.grid(row=i + 1, column=j)
                 widgets.append(widget)
         self._widgets = widgets
         self.refresh()
 
     def refresh(self):
         for widget in self._widgets:
-            widget.refresh()
+            widget.refresh(self.frm_format_picker.format.get())
 
 
-def file_open(txt_code):
-    file_name = tk.filedialog.askopenfilename(
-        title="Select a file",
-        filetypes=(("Assembly files", "*.asm"),))
+class FlashFrame(tk.Frame):
 
-    if not file_name:
-        return
+    def __init__(self, flash, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._flash = flash
 
-    try:
-        with open(file_name) as file:
-            txt_code.replace("0.0", "end", file.read())
-    except OSError as err:
-        tk.messagebox.showerror(
-            title="Error opening file!",
-            message=str(err))
+        self.frm_format_picker = FormatPickerFrame(self)
+        self.frm_format_picker.pack(side=tk.TOP)
 
+        self.listbox = tk.Listbox(self)
+        self.listbox.config(font="TkFixedFont")
+        self.listbox.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
-def file_save_as(txt_code):
-    file_name = tk.filedialog.asksaveasfilename(
-        title="Save as...",
-        filetypes=(("Assembly files", "*.asm"),))
+        self.scrollbar = tk.Scrollbar(
+            self, orient="vertical", command=self.listbox.yview)
+        self.scrollbar.pack(fill=tk.BOTH, side=tk.LEFT)
+        self.listbox.config(yscrollcommand=self.scrollbar.set)
 
-    if not file_name:
-        return
+        self.refresh()
 
-    try:
-        with open(file_name, "w") as file:
-            file.write(txt_code.get("0.0", "end"))
-    except OSError as err:
-        tk.messagebox.showerror(
-            title="Error saving file!",
-            message=str(err)
-        )
+    def refresh(self):
+        self.listbox.delete(0, tk.END)
+        for i in range(2**8):
+            self.listbox.insert(tk.END, f"{i:8d} : "
+                + self.frm_format_picker.format.get().format(self._flash[i]))
 
 
-def assemble(txt_code):
-    assembler = Assembler(txt_code.get("0.0", tk.END))
-    program = assembler.assemble()
-    txt_code.tag_error_clear()
-    if assembler.errors:
-        for line_no, err in assembler.errors:
-            txt_code.tag_error(line_no, str(err))
+class AVRSimTk(tk.Tk):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-def main():
-    machine = Machine()
+        self.machine = Machine()
 
-    window = tk.Tk()
-    window.title("AVR Simluator")
+        self.title("AVR Simluator")
 
-    menu = tk.Menu(window)
-    menu_file = tk.Menu(menu, tearoff=0)
-    menu_file.add_command(label="Open",
-                          command=lambda: file_open(txt_code))
-    menu_file.add_command(label="Save As",
-                          command=lambda: file_save_as(txt_code))
-    menu.add_cascade(label="File", menu=menu_file)
-    window.config(menu=menu)
+        self.menu = tk.Menu(self)
+        menu_file = tk.Menu(self.menu, tearoff=0)
+        menu_file.add_command(label="Open", command=self.file_open)
+        menu_file.add_command(label="Save As", command=self.file_save_as)
+        self.menu.add_cascade(label="File", menu=menu_file)
+        self.config(menu=self.menu)
 
-    frm_toolbar = tk.Frame(window)
-    frm_toolbar.pack(fill=tk.X, side=tk.TOP)
+        self.frm_toolbar = tk.Frame(self)
+        self.frm_toolbar.pack(fill=tk.X, side=tk.TOP)
 
-    btn_assemble = tk.Button(frm_toolbar,
-                             text="Assemble",
-                             command=lambda: assemble(txt_code))
-    btn_assemble.pack()
+        self.btn_assemble = tk.Button(
+            self.frm_toolbar, text="Assemble", command=self.assemble)
+        self.btn_assemble.pack()
 
-    txt_code = CodeText(window)
-    txt_code.pack(fill=tk.BOTH, side=tk.LEFT)
+        self.txt_code = CodeText(self)
+        self.txt_code.pack(fill=tk.BOTH, side=tk.LEFT)
 
-    frm_machine = MachineFrame(machine, window)
-    frm_machine.pack(fill=tk.BOTH, side=tk.LEFT)
+        self.frm_machine = tk.Frame(self)
+        self.frm_machine.pack(fill=tk.BOTH, side=tk.LEFT)
 
-    window.mainloop()
+        self.frm_gpr = RegisterFileFrame(
+            self.machine.R, 16, 2, self.frm_machine)
+        self.frm_gpr.pack(side=tk.LEFT)
+
+        self.frm_spr = RegisterFileFrame(
+            [self.machine.X, self.machine.Y, self.machine.Z,
+             self.machine.SP, self.machine.SREG, self.machine.PC],
+            3, 2, self.frm_machine)
+        self.frm_spr.pack(side=tk.LEFT, anchor=tk.N)
+
+        self.frm_flash = FlashFrame(self.machine.flash, self.frm_machine)
+        self.frm_flash.pack(fill=tk.Y, side=tk.LEFT)
+
+    def file_open(self):
+        file_name = tk.filedialog.askopenfilename(
+            title="Select a file",
+            filetypes=(("Assembly files", "*.asm"),))
+
+        if not file_name:
+            return
+
+        try:
+            with open(file_name) as file:
+                self.txt_code.replace("0.0", "end", file.read())
+        except OSError as err:
+            tk.messagebox.showerror(
+                title="Error opening file!",
+                message=str(err))
+
+    def file_save_as(self):
+        file_name = tk.filedialog.asksaveasfilename(
+            title="Save as...",
+            filetypes=(("Assembly files", "*.asm"),))
+
+        if not file_name:
+            return
+
+        try:
+            with open(file_name, "w") as file:
+                file.write(self.txt_code.get("0.0", "end"))
+        except OSError as err:
+            tk.messagebox.showerror(
+                title="Error saving file!",
+                message=str(err)
+            )
+
+    def assemble(self):
+        assembler = Assembler(self.txt_code.get("0.0", tk.END))
+        program = assembler.assemble()
+        self.txt_code.tag_error_clear()
+        if assembler.errors:
+            for line_no, err in assembler.errors:
+                self.txt_code.tag_error(line_no, str(err))
+        else:
+            self.machine.load_program(program)
+            self.frm_flash.refresh()
 
 
 if __name__ == "__main__":
-    main()
+    AVRSimTk().mainloop()
