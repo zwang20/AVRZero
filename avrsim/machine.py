@@ -8,17 +8,17 @@ class Machine:
                  instruction_set=InstructionSet.default):
         # === Data Memory ===
         self.RAMEND = RAMEND
-        self.memory = [Register(addr) for addr in range(RAMEND + 1)]
+        self.memory = [Register(addr=addr) for addr in range(RAMEND + 1)]
 
         # general purpose registers
         self.R = self.general_registers = self.memory[0x00:0x20]
-        self.X = PointerRegister(self.memory[27:25:-1])
-        self.Y = PointerRegister(self.memory[29:27:-1])
-        self.Z = PointerRegister(self.memory[31:29:-1])
+        self.X = PointerRegister("X", self.memory[27:25:-1])
+        self.Y = PointerRegister("Y", self.memory[29:27:-1])
+        self.Z = PointerRegister("Z", self.memory[31:29:-1])
 
         # I/O registers
         self.IOR = self.io_registers = self.memory[0x20:0x60]
-        self.SP = PointerRegister(self.memory[0x5E:0x5C:-1])
+        self.SP = PointerRegister("stack pointer", self.memory[0x5E:0x5C:-1])
         self.SREG = StatusRegister.from_(self.memory[0x5F])
 
         # extended I/O registers
@@ -28,7 +28,7 @@ class Machine:
         self.flash_size = flash_size
         self.flash = [0x00] * flash_size
 
-        self.PC = PointerRegister((Register(), Register()))
+        self.PC = PointerRegister("program counter", (Register(), Register()))
 
         # === Instruction Set ===
         self.instruction_set = instruction_set

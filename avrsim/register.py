@@ -6,8 +6,9 @@ class Register:
 
     N_BITS = BYTE_SIZE
 
-    def __init__(self, addr=None, val=None):
-        self.addr = addr
+    def __init__(self, name=None, addr=None, val=None):
+        self._name = name
+        self._addr = addr
         if val is None:
             val = randint(0, (1 << self.N_BITS) - 1)
         self.val = val
@@ -20,6 +21,17 @@ class Register:
 
     def __str__(self):
         return f"{self.addr_str} -> {self.val:0{self.N_BITS}b}"
+
+    @property
+    def name(self):
+        if self._name is not None:
+            return self._name
+        else:
+            return self.addr_str
+
+    @property
+    def addr(self):
+        return self._addr
 
     @property
     def addr_str(self):
@@ -49,8 +61,9 @@ class PointerRegister(Register):
 
     N_BITS = BYTE_SIZE * 2
 
-    def __init__(self, pair=None):
+    def __init__(self, name=None, pair=None):
         pair = tuple(pair)
+        self._name = name
         self._addr = (r.addr for r in pair)
         self._pair = pair
 
@@ -92,6 +105,7 @@ class StatusRegister(Register):
 
     @classmethod
     def from_(cls ,reg):
+        reg._name = "status register"
         reg.__class__ = cls
         return reg
 
