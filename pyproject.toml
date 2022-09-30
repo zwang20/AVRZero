@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "avrsim"
+name = "avrzero"
 version = "0.0.1"
 authors = [
   { name="Edward Ji", email="jiziao6@gmail.com" },

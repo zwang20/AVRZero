@@ -1,5 +1,6 @@
 from random import randint
-from avrsim.instruction import BYTE_SIZE
+
+from avrzero.instruction import BYTE_SIZE
 
 
 class Register:

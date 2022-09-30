@@ -1,5 +1,5 @@
-# AVR Simulator
-A simple AVR instruction set simulator for educational purposes.
+# AVR Zero
+A simple AVR instruction set IDE and simulator for educational purposes.
 
 > **Warning**
 >

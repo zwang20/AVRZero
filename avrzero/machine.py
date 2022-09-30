@@ -1,6 +1,6 @@
-from avrsim.error import AVRMachineError
-from avrsim.instruction import BYTE_SIZE, InstructionSet
-from avrsim.register import Register, PointerRegister, StatusRegister
+from avrzero.error import AVRMachineError
+from avrzero.instruction import BYTE_SIZE, InstructionSet
+from avrzero.register import Register, PointerRegister, StatusRegister
 
 
 class Machine:
@@ -93,5 +93,4 @@ class Machine:
         if instruction is None:
             return
         operand_map = instruction.opcode.get_operand_map(opcode)
-        print(instruction.name, operand_map)
         instruction.action(self, **operand_map)

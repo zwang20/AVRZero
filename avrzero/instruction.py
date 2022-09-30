@@ -1,6 +1,6 @@
 from functools import cache, cached_property
 
-from avrsim.error import AVRSyntaxError
+from avrzero.error import AVRSyntaxError
 
 
 BYTE_SIZE = 8

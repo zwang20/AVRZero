@@ -1,8 +1,8 @@
 import argparse
 from pprint import pprint
 
-from avrsim.assembler import Assembler
-from avrsim.machine import Machine
+from avrzero.assembler import Assembler
+from avrzero.machine import Machine
 
 
 parser = argparse.ArgumentParser(

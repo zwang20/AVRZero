@@ -1,5 +1,5 @@
-from avrsim.error import AVRSyntaxError
-from avrsim.instruction import InstructionSet
+from avrzero.error import AVRSyntaxError
+from avrzero.instruction import InstructionSet
 
 
 class Assembler:

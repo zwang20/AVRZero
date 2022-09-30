@@ -2,8 +2,8 @@ import math
 import tkinter.filedialog
 import tkinter as tk
 
-from avrsim.assembler import Assembler
-from avrsim.machine import Machine
+from avrzero.assembler import Assembler
+from avrzero.machine import Machine
 
 
 class CodeText(tk.Text):
@@ -119,7 +119,7 @@ class AVRSimTk(tk.Tk):
 
         self.machine = Machine()
 
-        self.title("AVR Simluator")
+        self.title("AVR Zero")
 
         self.menu = tk.Menu(self)
         menu_file = tk.Menu(self.menu, tearoff=0)

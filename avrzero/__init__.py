@@ -6,4 +6,4 @@ __all__ = [
     "register"
 ]
 
-__package__ = "avrsim"
+__package__ = "avrzero"
