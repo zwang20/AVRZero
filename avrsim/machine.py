@@ -54,10 +54,10 @@ class Machine:
 
     def _push_stack(self, val):
         self.SP.val -= 1
-        self.memory[self.SP.val] = val
+        self.memory[self.SP.val].val = val
 
     def _pop_stack(self):
-        val = self.memory[self.SP.val]
+        val = self.memory[self.SP.val].val
         self.SP.val += 1
         return val
 

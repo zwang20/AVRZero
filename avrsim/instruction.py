@@ -169,7 +169,7 @@ class Opcode:
         codes = []
         for _ in range(self.n_bits // WORD_SIZE):
             codes.insert(0, mapped & ((1 << WORD_SIZE) - 1))
-            mapped >>= BYTE_SIZE
+            mapped >>= WORD_SIZE
         return codes
 
     @staticmethod
@@ -313,11 +313,11 @@ class InstructionSet:
     def by_opcode(self, codes):
         opcode = 0
         for code in codes:
-            opcode <<= BYTE_SIZE
+            opcode <<= WORD_SIZE
             opcode |= code
         for instruction in self._instructions:
-            if instruction.opcode.fixed_mask & opcode == \
-                    instruction.opcode.fixed:
+            if (instruction.opcode.fixed_mask & opcode ==
+                    instruction.opcode.fixed):
                 return instruction
 
 
@@ -332,7 +332,7 @@ InstructionSet.default = InstructionSet("default")
 )
 def adc(machine, d, r):
     Rd, Rr = machine.R[d], machine.R[r]
-    SREG = machine.SREG
+    R = SREG = machine.SREG
 
     val = Rd.val + Rr.val + SREG.C
     SREG.H = Rd[3] and Rr[3] or Rr[3] and not R[3] and not R[3] and Rd[3]
@@ -353,7 +353,7 @@ def adc(machine, d, r):
 )
 def add(machine, d, r):
     Rd, Rr = machine.R[d], machine.R[r]
-    SREG = machine.SREG
+    R = SREG = machine.SREG
 
     val = Rd.val + Rr.val + SREG.C
     SREG.H = Rd[3] and Rr[3] or Rr[3] and not R[3] and not R[3] and Rd[3]
@@ -382,8 +382,7 @@ def bclr(machine, s):
     "kkkk" "kkkk" "kkkk" "kkkk"
 )
 def call(machine, k):
-    machine.push_stack(PC.val + 2, 2)
-    machine.SP.val = machine.SP.val - 2
+    machine.push_stack(machine.PC.val + 2, 2)
     machine.PC.val = k
 
 @Instruction.make(
