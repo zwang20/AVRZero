@@ -1,3 +1,4 @@
+import tkinter.filedialog
 import tkinter as tk
 
 from avrsim.assembler import Assembler
@@ -64,6 +65,39 @@ class MachineFrame(tk.Frame):
             widget.refresh()
 
 
+def file_open(txt_code):
+    file_name = tk.filedialog.askopenfilename(
+        title="Select a file",
+        filetypes=(("Assembly files", "*.asm"),))
+
+    if not file_name:
+        return
+
+    try:
+        with open(file_name) as file:
+            txt_code.replace("0.0", "end", file.read())
+    except OSError as err:
+        tk.messagebox.showerror(
+            title="Error opening file!",
+            message=str(err))
+
+
+def file_save_as(txt_code):
+    file_name = tk.filedialog.asksaveasfilename(
+        title="Save as...",
+        filetypes=(("Assembly files", "*.asm"),))
+
+    if not file_name:
+        return
+
+    try:
+        with open(file_name, "w") as file:
+            file.write(txt_code.get("0.0", "end"))
+    except OSError as err:
+        tk.messagebox.showerror(
+            title="Error saving file!",
+            message=str(err)
+        )
 
 
 def assemble(txt_code):
@@ -80,6 +114,15 @@ def main():
 
     window = tk.Tk()
     window.title("AVR Simluator")
+
+    menu = tk.Menu(window)
+    menu_file = tk.Menu(menu, tearoff=0)
+    menu_file.add_command(label="Open",
+                          command=lambda: file_open(txt_code))
+    menu_file.add_command(label="Save As",
+                          command=lambda: file_save_as(txt_code))
+    menu.add_cascade(label="File", menu=menu_file)
+    window.config(menu=menu)
 
     frm_toolbar = tk.Frame(window)
     frm_toolbar.pack(fill=tk.X, side=tk.TOP)
