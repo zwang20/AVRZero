@@ -137,6 +137,9 @@ class AVRSimTk(tk.Tk):
         self.btn_step = tk.Button(
             self.frm_toolbar, text="Step", command=self.step)
         self.btn_step.pack(side=tk.RIGHT)
+        self.btn_reset = tk.Button(
+            self.frm_toolbar, text="Reset", command=self.reset)
+        self.btn_reset.pack(side=tk.RIGHT)
 
         self.txt_code = CodeText(self)
         self.txt_code.pack(fill=tk.BOTH, side=tk.LEFT)
@@ -200,6 +203,11 @@ class AVRSimTk(tk.Tk):
         else:
             self.machine.load_program(program)
             self.frm_flash.refresh()
+
+    def reset(self):
+        self.machine.reset()
+        self.frm_gpr.refresh()
+        self.frm_spr.refresh()
 
     def step(self):
         self.machine.step()
