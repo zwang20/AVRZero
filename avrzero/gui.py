@@ -125,24 +125,40 @@ class FlashFrame(tk.Frame):
                 + format_spec.format(self._flash[i]))
 
         self.scrollbar = tk.Scrollbar(
-            self, orient="vertical", command=self.listbox.yview)
+            self, orient="vertical", command=self.listbox_yview)
         self.scrollbar.pack(fill=tk.BOTH, side=tk.LEFT)
-        self.listbox.config(yscrollcommand=self.scrollbar.set)
+        self.listbox.config(yscrollcommand=self.listbox_yscroll)
 
         self.refresh()
 
-    def refresh(self):
+    def listbox_yview(self, *args):
+        self.listbox.yview(*args)
+        self.update_inview()
+
+    def listbox_yscroll(self, first, last):
+        self.scrollbar.set(first, last)
+        self.update_inview()
+
+    def update_inview(self):
         format_spec = Formatter.by_name(
             self.frm_format_picker.formatter.get()).format_spec
 
-        self.listbox.delete(0, 2**8 - 1)
-        for i in range(2**8):
+        start = self.listbox.nearest(0)
+        stop = start
+        while (self.listbox.bbox(stop) is not None
+               and stop < self.listbox.size()):
+            stop += 1
+        self.listbox.delete(start, stop - 1)
+        for i in range(start, stop):
             self.listbox.insert(i, f"{i:8d} : "
                 + format_spec.format(self._flash[i]))
 
+        self.listbox.itemconfigure(self._PC.val, background="grey")
+
+    def refresh(self):
+        self.update_inview()
         self.listbox.see(self._PC.val)
         self.listbox.itemconfigure(self._prev_select, background="")
-        self.listbox.itemconfigure(self._PC.val, background="grey")
         self._prev_select = self._PC.val
 
 
