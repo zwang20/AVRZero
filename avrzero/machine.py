@@ -9,7 +9,11 @@ class Machine:
                  instruction_set=InstructionSet.default):
         # === Data Memory ===
         self.RAMEND = RAMEND
-        self.memory = [Register(addr=addr) for addr in range(RAMEND + 1)]
+        self.memory = []
+        for addr in range(32):
+            self.memory.append(Register(name=f"R{addr}", addr=addr))
+        for addr in range(32, RAMEND + 1):
+            self.memory.append(Register(addr=addr))
 
         # general purpose registers
         self.R = self.general_registers = self.memory[0x00:0x20]
