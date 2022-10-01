@@ -57,6 +57,9 @@ class Register:
         self.val &= ~(1 << idx)
         self.val |= bit << idx
 
+    def __format__(self, format_spec):
+        return self.val.__format__(format_spec)
+
 
 class PointerRegister(Register):
 
