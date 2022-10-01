@@ -87,8 +87,10 @@ class RegisterFileFrame(tk.Frame):
 
 class FlashFrame(tk.Frame):
 
-    def __init__(self, flash, *args, **kwargs):
+    def __init__(self, PC, flash, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._prev_select = 0
+        self._PC = PC
         self._flash = flash
 
         self.frm_format_picker = FormatPickerFrame(self)
@@ -97,6 +99,9 @@ class FlashFrame(tk.Frame):
         self.listbox = tk.Listbox(self)
         self.listbox.config(font="TkFixedFont")
         self.listbox.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+        for i in range(len(self._flash)):
+            self.listbox.insert(tk.END, f"{i:8d} : "
+                + self.frm_format_picker.format.get().format(self._flash[i]))
 
         self.scrollbar = tk.Scrollbar(
             self, orient="vertical", command=self.listbox.yview)
@@ -106,10 +111,15 @@ class FlashFrame(tk.Frame):
         self.refresh()
 
     def refresh(self):
-        self.listbox.delete(0, tk.END)
+        self.listbox.delete(0, 2**8 - 1)
         for i in range(2**8):
-            self.listbox.insert(tk.END, f"{i:8d} : "
+            self.listbox.insert(i, f"{i:8d} : "
                 + self.frm_format_picker.format.get().format(self._flash[i]))
+
+        self.listbox.see(self._PC.val)
+        self.listbox.itemconfigure(self._prev_select, background="")
+        self.listbox.itemconfigure(self._PC.val, background="grey")
+        self._prev_select = self._PC.val
 
 
 class AVRSimTk(tk.Tk):
@@ -142,14 +152,14 @@ class AVRSimTk(tk.Tk):
         self.btn_reset.pack(side=tk.RIGHT)
 
         self.txt_code = CodeText(self)
-        self.txt_code.pack(fill=tk.BOTH, side=tk.LEFT)
+        self.txt_code.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
         self.frm_machine = tk.Frame(self)
         self.frm_machine.pack(fill=tk.BOTH, side=tk.LEFT)
 
         self.frm_gpr = RegisterFileFrame(
             self.machine.R, 16, 2, self.frm_machine)
-        self.frm_gpr.pack(side=tk.LEFT)
+        self.frm_gpr.pack(side=tk.LEFT, anchor=tk.N)
 
         self.frm_spr = RegisterFileFrame(
             [self.machine.X, self.machine.Y, self.machine.Z,
@@ -157,7 +167,14 @@ class AVRSimTk(tk.Tk):
             3, 2, self.frm_machine)
         self.frm_spr.pack(side=tk.LEFT, anchor=tk.N)
 
-        self.frm_flash = FlashFrame(self.machine.flash, self.frm_machine)
+        self.frm_stack = FlashFrame(self.machine.SP,
+                                    self.machine.memory,
+                                    self.frm_machine)
+        self.frm_stack.pack(fill=tk.Y, side=tk.LEFT)
+
+        self.frm_flash = FlashFrame(self.machine.PC,
+                                    self.machine.flash,
+                                    self.frm_machine)
         self.frm_flash.pack(fill=tk.Y, side=tk.LEFT)
 
     def file_open(self):
@@ -208,11 +225,15 @@ class AVRSimTk(tk.Tk):
         self.machine.reset()
         self.frm_gpr.refresh()
         self.frm_spr.refresh()
+        self.frm_stack.refresh()
+        self.frm_flash.refresh()
 
     def step(self):
         self.machine.step()
         self.frm_gpr.refresh()
         self.frm_spr.refresh()
+        self.frm_stack.refresh()
+        self.frm_flash.refresh()
 
 
 if __name__ == "__main__":
