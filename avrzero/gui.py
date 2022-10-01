@@ -3,6 +3,7 @@ import tkinter.filedialog
 import tkinter as tk
 
 from avrzero.assembler import Assembler
+from avrzero.formatter import Formatter
 from avrzero.machine import Machine
 
 
@@ -37,29 +38,46 @@ class RegisterFrame(tk.Frame):
         super().__init__(*args, **kwargs)
         self._register = register
         self.lab_name = tk.Label(self)
+        self.lab_name.config(text=self._register.name)
         self.lab_name.pack()
-        self.ent_val = tk.Entry(self)
+        self.ent_val = tk.Entry(self,
+                                validate="focusout",
+                                validatecommand=self.validate)
+        self.ent_val.bind("<Return>", lambda event: self.validate())
         self.ent_val.pack()
         self.ent_val.config(font="TkFixedFont")
 
-    def refresh(self, format_str):
-        self.lab_name.config(text=self._register.name)
+    def get_format(self):
+        return Formatter.by_name(self.master.frm_format_picker.formatter.get())
+
+    def validate(self):
+        try:
+            self._register.val = int(self.ent_val.get(),
+                                     base=self.get_format().base)
+        except ValueError:
+            pass
+        self.refresh()
+
+    def refresh(self):
         self.ent_val.delete(0, tk.END)
-        self.ent_val.insert(0, format_str.format(self._register.val))
+        self.ent_val.insert(
+            0, self.get_format().format_spec.format(self._register.val))
 
 
 class FormatPickerFrame(tk.Frame):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.format = tk.StringVar()
+        self.formatter = tk.StringVar()
         self._rad_ls = []
-        for text, value in (("binary", "{:016b}"),
-                            ("octal", "{:06o}"),
-                            ("decimal", "{:05d}"),
-                            ("hexadecimal", "{:04x}")):
-            rad = tk.Radiobutton(self, text=text, variable=self.format,
-                                 value=value, command=self.master.refresh)
+
+        for formatter in Formatter.all:
+            rad = tk.Radiobutton(
+                self,
+                text=formatter.name,
+                variable=self.formatter,
+                value=formatter.name,
+                command=self.master.refresh)
             rad.pack(side=tk.LEFT)
             self._rad_ls.append(rad)
         self._rad_ls[0].select()
@@ -82,7 +100,7 @@ class RegisterFileFrame(tk.Frame):
 
     def refresh(self):
         for widget in self._widgets:
-            widget.refresh(self.frm_format_picker.format.get())
+            widget.refresh()
 
 
 class FlashFrame(tk.Frame):
@@ -99,9 +117,12 @@ class FlashFrame(tk.Frame):
         self.listbox = tk.Listbox(self)
         self.listbox.config(font="TkFixedFont")
         self.listbox.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+
+        format_spec = Formatter.by_name(
+            self.frm_format_picker.formatter.get()).format_spec
         for i in range(len(self._flash)):
             self.listbox.insert(tk.END, f"{i:8d} : "
-                + self.frm_format_picker.format.get().format(self._flash[i]))
+                + format_spec.format(self._flash[i]))
 
         self.scrollbar = tk.Scrollbar(
             self, orient="vertical", command=self.listbox.yview)
@@ -111,10 +132,13 @@ class FlashFrame(tk.Frame):
         self.refresh()
 
     def refresh(self):
+        format_spec = Formatter.by_name(
+            self.frm_format_picker.formatter.get()).format_spec
+
         self.listbox.delete(0, 2**8 - 1)
         for i in range(2**8):
             self.listbox.insert(i, f"{i:8d} : "
-                + self.frm_format_picker.format.get().format(self._flash[i]))
+                + format_spec.format(self._flash[i]))
 
         self.listbox.see(self._PC.val)
         self.listbox.itemconfigure(self._prev_select, background="")
