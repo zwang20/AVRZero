@@ -4,6 +4,7 @@ import tkinter as tk
 
 from avrzero.assembler import Assembler
 from avrzero.formatter import Formatter
+from avrzero.instruction import BYTE_SIZE, WORD_SIZE
 from avrzero.machine import Machine
 
 
@@ -59,9 +60,9 @@ class RegisterFrame(tk.Frame):
         self.refresh()
 
     def refresh(self):
+        format_spec = self.get_format().format_spec(self._register.N_BITS)
         self.ent_val.delete(0, tk.END)
-        self.ent_val.insert(
-            0, self.get_format().format_spec.format(self._register.val))
+        self.ent_val.insert(0, format_spec.format(self._register.val))
 
 
 class FormatPickerFrame(tk.Frame):
@@ -105,9 +106,10 @@ class RegisterFileFrame(tk.Frame):
 
 class FlashFrame(tk.Frame):
 
-    def __init__(self, PC, flash, *args, **kwargs):
+    def __init__(self, PC, flash, n_bits, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._prev_select = 0
+        self._n_bits = n_bits
         self._PC = PC
         self._flash = flash
 
@@ -119,7 +121,7 @@ class FlashFrame(tk.Frame):
         self.listbox.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
         format_spec = Formatter.by_name(
-            self.frm_format_picker.formatter.get()).format_spec
+            self.frm_format_picker.formatter.get()).format_spec(self._n_bits)
         for i in range(len(self._flash)):
             self.listbox.insert(tk.END, f"{i:8d} : "
                 + format_spec.format(self._flash[i]))
@@ -141,7 +143,7 @@ class FlashFrame(tk.Frame):
 
     def update_inview(self):
         format_spec = Formatter.by_name(
-            self.frm_format_picker.formatter.get()).format_spec
+            self.frm_format_picker.formatter.get()).format_spec(self._n_bits)
 
         start = self.listbox.nearest(0)
         stop = start
@@ -209,11 +211,13 @@ class AVRSimTk(tk.Tk):
 
         self.frm_stack = FlashFrame(self.machine.SP,
                                     self.machine.memory,
+                                    BYTE_SIZE,
                                     self.frm_machine)
         self.frm_stack.pack(fill=tk.Y, side=tk.LEFT)
 
         self.frm_flash = FlashFrame(self.machine.PC,
                                     self.machine.flash,
+                                    WORD_SIZE,
                                     self.frm_machine)
         self.frm_flash.pack(fill=tk.Y, side=tk.LEFT)
 
