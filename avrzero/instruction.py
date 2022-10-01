@@ -35,19 +35,22 @@ class Syntax:
                     num_str += string[0]
                     string = string[1:]
                 if not num_str:
-                    raise AVRSyntaxError("expect digits")
+                    raise AVRSyntaxError(f"expect digits before {string!r}",
+                                         obj=self)
                 operand_map[token.name] = int(num_str)
             elif token == " ":
                 if not string or not string[0].isspace():
-                    raise AVRSyntaxError("expect space")
+                    raise AVRSyntaxError(f"expect space before {string!r}",
+                                         obj=self)
                 string = string.lstrip()
             else:
                 if not string.lower().startswith(token.lower()):
-                    raise AVRSyntaxError(f"expect {token!r}")
+                    raise AVRSyntaxError(f"expect {token!r} before {string!r}",
+                                         obj=self)
                 string = string[len(token):]
 
         if string and not string.isspace():
-            raise AVRSyntaxError(f"unexpected {string!r}")
+            raise AVRSyntaxError(f"unexpected {string!r} at the end", obj=self)
 
         return operand_map
 
@@ -286,7 +289,8 @@ class Instruction:
         operand_map = self._syntax.match(string)
         for operand in self._operands:
             if not operand.check(operand_map[operand.name]):
-                raise AVRSyntaxError("invalid operand")
+                raise AVRSyntaxError(
+                    f"operand {operand.name} has invalid value", obj=self)
 
         return self._opcode.map_operands(operand_map)
 

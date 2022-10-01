@@ -19,7 +19,7 @@ class CodeText(tk.Text):
             lab.destroy()
 
     def tag_error(self, line_no, err_str):
-        lab_err = tk.Label(text=err_str)
+        lab_err = tk.Label(text=err_str, justify=tk.LEFT)
         tag_name = f"E{line_no}"
         self.tag_add(tag_name,
                      f"{line_no + 1}.0", f"{line_no + 1}.end")
