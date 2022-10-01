@@ -55,8 +55,9 @@ class RegisterFrame(tk.Frame):
         try:
             self._register.val = int(self.ent_val.get(),
                                      base=self.get_format().base)
-        except ValueError:
-            pass
+            self.winfo_toplevel().show_message(f"{self._register.name} saved")
+        except ValueError as err:
+            self.winfo_toplevel().show_message(str(err))
         self.refresh()
 
     def refresh(self):
@@ -181,7 +182,7 @@ class AVRSimTk(tk.Tk):
         self.config(menu=self.menu)
 
         self.frm_toolbar = tk.Frame(self)
-        self.frm_toolbar.pack(fill=tk.X, side=tk.TOP)
+        self.frm_toolbar.pack(fill=tk.X)
 
         self.btn_assemble = tk.Button(
             self.frm_toolbar, text="Assemble", command=self.assemble)
@@ -193,10 +194,13 @@ class AVRSimTk(tk.Tk):
             self.frm_toolbar, text="Reset", command=self.reset)
         self.btn_reset.pack(side=tk.RIGHT)
 
-        self.txt_code = CodeText(self)
+        self.frm_main = tk.Frame()
+        self.frm_main.pack(fill=tk.Y, expand=True)
+
+        self.txt_code = CodeText(self.frm_main)
         self.txt_code.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
-        self.frm_machine = tk.Frame(self)
+        self.frm_machine = tk.Frame(self.frm_main)
         self.frm_machine.pack(fill=tk.BOTH, side=tk.LEFT)
 
         self.frm_gpr = RegisterFileFrame(
@@ -220,6 +224,14 @@ class AVRSimTk(tk.Tk):
                                     WORD_SIZE,
                                     self.frm_machine)
         self.frm_flash.pack(fill=tk.Y, side=tk.LEFT)
+
+        self.lab_msg = tk.Label(self,
+                                text="No message.",
+                                background="grey")
+        self.lab_msg.pack(fill=tk.X)
+
+    def show_message(self, text):
+        self.lab_msg.config(text=text)
 
     def file_open(self):
         file_name = tk.filedialog.askopenfilename(
