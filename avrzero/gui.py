@@ -1,4 +1,5 @@
 import math
+import os
 import tkinter.filedialog
 import tkinter as tk
 
@@ -167,6 +168,8 @@ class FlashFrame(tk.Frame):
 
 class AVRSimTk(tk.Tk):
 
+    EXAMPLE_DIR = os.path.join(os.path.dirname(__file__), "example")
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -176,8 +179,17 @@ class AVRSimTk(tk.Tk):
 
         self.menu = tk.Menu(self)
         menu_file = tk.Menu(self.menu, tearoff=0)
-        menu_file.add_command(label="Open", command=self.file_open)
+        menu_file.add_command(label="Open", command=self.ask_file_open)
         menu_file.add_command(label="Save As", command=self.file_save_as)
+
+        menu_example = tk.Menu(menu_file, tearoff=0)
+        for file_name in os.listdir(self.EXAMPLE_DIR):
+            name = os.path.splitext(file_name)[0].replace("_", " ").title()
+            path = os.path.join(self.EXAMPLE_DIR, file_name)
+            menu_example.add_command(label=name,
+                                     command=lambda: self.file_open(path))
+        menu_file.add_cascade(label="Example", menu=menu_example)
+
         self.menu.add_cascade(label="File", menu=menu_file)
         self.config(menu=self.menu)
 
@@ -233,7 +245,7 @@ class AVRSimTk(tk.Tk):
     def show_message(self, text):
         self.lab_msg.config(text=text)
 
-    def file_open(self):
+    def ask_file_open(self):
         file_name = tk.filedialog.askopenfilename(
             title="Select a file",
             filetypes=(("Assembly files", "*.asm"),))
@@ -241,13 +253,14 @@ class AVRSimTk(tk.Tk):
         if not file_name:
             return
 
+        self.file_open(file_name)
+
+    def file_open(self, file_name):
         try:
             with open(file_name) as file:
                 self.txt_code.replace("0.0", "end", file.read())
         except OSError as err:
-            tk.messagebox.showerror(
-                title="Error opening file!",
-                message=str(err))
+            self.show_message(str(err))
 
     def file_save_as(self):
         file_name = tk.filedialog.asksaveasfilename(
