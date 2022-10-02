@@ -299,7 +299,10 @@ class AVRSimTk(tk.Tk):
             for line_no, err in assembler.errors:
                 self.txt_code.tag_error(line_no, str(err))
         else:
+            self.frm_flash.listbox.configure(state=tk.DISABLED)
             self.machine.load_program(program)
+            self.frm_flash.listbox.configure(state=tk.NORMAL)
+            self.frm_flash.refresh()
 
     def reset(self):
         self.machine.reset()
