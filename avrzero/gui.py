@@ -108,12 +108,19 @@ class RegisterFileFrame(tk.Frame):
 
 class FlashFrame(tk.Frame):
 
-    def __init__(self, PC, flash, n_bits, *args, **kwargs):
+    def __init__(self, counter, flash, n_bits, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._prev_select = 0
         self._n_bits = n_bits
-        self._PC = PC
+        self._idx_len = math.ceil(math.log(len(flash), 10))
+
         self._flash = flash
+        for i, register in enumerate(flash):
+            register.trace_add("write",
+                               lambda *args, i=i: self.update_line(idx=i))
+
+        self._prev_select = 0
+        self._counter = counter
+        self._counter.trace_add("write", self.update_highlight)
 
         self.frm_format_picker = FormatPickerFrame(self)
         self.frm_format_picker.pack(side=tk.TOP)
@@ -123,47 +130,40 @@ class FlashFrame(tk.Frame):
         self.listbox.config(font="TkFixedFont")
         self.listbox.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
-        format_spec = Formatter.by_name(
-            self.frm_format_picker.formatter.get()).format_spec(self._n_bits)
-        for i in range(len(self._flash)):
-            self.listbox.insert(tk.END, f"{i:8d} : "
-                + format_spec.format(self._flash[i]))
-
         self.scrollbar = tk.Scrollbar(
-            self, orient="vertical", command=self.listbox_yview)
+            self, orient="vertical", command=self.listbox.yview)
         self.scrollbar.pack(fill=tk.BOTH, side=tk.LEFT)
-        self.listbox.config(yscrollcommand=self.listbox_yscroll)
+        self.listbox.config(yscrollcommand=self.scrollbar.set)
 
         self.refresh()
 
-    def listbox_yview(self, *args):
-        self.listbox.yview(*args)
-        self.update_inview()
-
-    def listbox_yscroll(self, first, last):
-        self.scrollbar.set(first, last)
-        self.update_inview()
-
-    def update_inview(self):
+    def update_line(self, idx):
+        val = self._flash[idx].get()
         format_spec = Formatter.by_name(
             self.frm_format_picker.formatter.get()).format_spec(self._n_bits)
+        line = "{:<{}d} | {}".format(idx,
+                                     self._idx_len,
+                                     format_spec.format(val))
 
-        start = self.listbox.nearest(0)
-        stop = start
-        while (self.listbox.bbox(stop) is not None
-               and stop < self.listbox.size()):
-            stop += 1
-        self.listbox.delete(start, stop - 1)
-        for i in range(start, stop):
-            self.listbox.insert(i, f"{i:8d} : "
-                + format_spec.format(self._flash[i]))
+        if line != self.listbox.get(idx):
+            self.listbox.delete(idx)
+            self.listbox.insert(idx, line)
+            self.update_highlight()
 
     def refresh(self, *args):
-        self.update_inview()
-        self.listbox.see(self._PC.val)
+        format_spec = Formatter.by_name(
+            self.frm_format_picker.formatter.get()).format_spec(self._n_bits)
+        self.listbox.delete(0, tk.END)
+        for i, cell in enumerate(self._flash):
+            self.listbox.insert(tk.END, "{:<{}d} | {}".format(
+                i, self._idx_len, format_spec.format(cell.get())))
+        self.update_highlight()
+
+    def update_highlight(self, *args):
         self.listbox.itemconfigure(self._prev_select, background="")
-        self.listbox.itemconfigure(self._PC.val, background="grey")
-        self._prev_select = self._PC.val
+        self.listbox.itemconfigure(self._counter.val, background="grey")
+        self._prev_select = self._counter.val
+        self.listbox.see(self._counter.val)
 
 
 class AVRSimTk(tk.Tk):
@@ -290,17 +290,12 @@ class AVRSimTk(tk.Tk):
                 self.txt_code.tag_error(line_no, str(err))
         else:
             self.machine.load_program(program)
-            self.frm_flash.refresh()
 
     def reset(self):
         self.machine.reset()
-        self.frm_stack.refresh()
-        self.frm_flash.refresh()
 
     def step(self):
         self.machine.step()
-        self.frm_stack.refresh()
-        self.frm_flash.refresh()
 
 
 if __name__ == "__main__":

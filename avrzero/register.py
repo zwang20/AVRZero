@@ -56,6 +56,12 @@ class Register:
     def val(self, val):
         self._val.set(val % (1 << self.N_BITS))
 
+    def get(self):
+        return self.val
+
+    def set(self, value):
+        self.val = value
+
     def __getitem__(self, idx):
         return (self.val & (1 << idx)) >> idx
 

@@ -2,6 +2,7 @@ from avrzero import BYTE_SIZE
 from avrzero.error import AVRMachineError
 from avrzero.instruction import InstructionSet
 from avrzero.register import Register, PointerRegister, StatusRegister
+from avrzero.variable import IntVar
 
 
 class Machine:
@@ -32,7 +33,7 @@ class Machine:
 
         # === Program Memory ===
         self.flash_size = flash_size
-        self.flash = [0x00] * flash_size
+        self.flash = [IntVar(win, 0x0000) for _ in range(self.flash_size)]
 
         self.PC = PointerRegister("program counter", (Register(), Register()))
 
@@ -85,15 +86,17 @@ class Machine:
         self.PC.val = 0x0000
 
     def load_program(self, program):
-        self.flash[:] = [0x00] * len(self.flash)
-        program = program[:len(self.flash)]
-        self.flash[:len(program)] = program
+        program = program[:self.flash_size]
+        for i in range(len(program)):
+            self.flash[i].set(program[i])
+        for i in range(len(program), self.flash_size):
+            self.flash[i].set(0)
 
     def step(self):
-        opcode = self.flash[self.PC.val:self.PC.val + 1]
+        opcode = [*map(IntVar.get, self.flash[self.PC.val:self.PC.val + 1])]
         instruction = self.instruction_set.by_opcode(opcode)
         if instruction is None:
-            opcode = self.flash[self.PC.val:self.PC.val + 2]
+            opcode = [*map(IntVar.get, self.flash[self.PC.val:self.PC.val + 2])]
             instruction = self.instruction_set.by_opcode(opcode)
         if instruction is None:
             return
