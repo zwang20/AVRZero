@@ -40,6 +40,7 @@ class RegisterFrame(tk.Frame):
         super().__init__(*args, **kwargs)
         self._register = register
         self._register.trace_add("write", self.refresh)
+        self._blink = None
         self.lab_name = tk.Label(self, text=self._register.name)
         self.lab_name.pack(fill=tk.X, side=tk.LEFT)
         self.ent_val = tk.Entry(self,
@@ -61,10 +62,19 @@ class RegisterFrame(tk.Frame):
             self.winfo_toplevel().show_message(str(err))
         self.refresh()
 
+    def blink_entry(self):
+        self.ent_val.configure(background="grey")
+        if self._blink is not None:
+            self.after_cancel(self._blink)
+        self._blink = self.ent_val.after(500, lambda: self.ent_val.configure(
+            background="systemTextBackgroundColor"))
+
     def refresh(self, *args):
         format_spec = self.get_format().format_spec(self._register.N_BITS)
         self.ent_val.delete(0, tk.END)
         self.ent_val.insert(0, format_spec.format(self._register.val))
+        if args:
+            self.blink_entry()
 
 
 class FormatPickerFrame(tk.Frame):
