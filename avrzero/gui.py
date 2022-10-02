@@ -39,14 +39,14 @@ class RegisterFrame(tk.Frame):
     def __init__(self, register, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._register = register
-        self.lab_name = tk.Label(self)
-        self.lab_name.config(text=self._register.name)
-        self.lab_name.pack()
+        self._register.trace_add("write", self.refresh)
+        self.lab_name = tk.Label(self, text=self._register.name)
+        self.lab_name.pack(fill=tk.X, side=tk.LEFT)
         self.ent_val = tk.Entry(self,
                                 validate="focusout",
                                 validatecommand=self.validate)
         self.ent_val.bind("<Return>", lambda event: self.validate())
-        self.ent_val.pack()
+        self.ent_val.pack(side=tk.LEFT)
         self.ent_val.config(font="TkFixedFont")
 
     def get_format(self):
@@ -61,7 +61,7 @@ class RegisterFrame(tk.Frame):
             self.winfo_toplevel().show_message(str(err))
         self.refresh()
 
-    def refresh(self):
+    def refresh(self, *args):
         format_spec = self.get_format().format_spec(self._register.N_BITS)
         self.ent_val.delete(0, tk.END)
         self.ent_val.insert(0, format_spec.format(self._register.val))
@@ -71,7 +71,7 @@ class FormatPickerFrame(tk.Frame):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.formatter = tk.StringVar()
+        self.formatter = tk.StringVar(self)
         self._rad_ls = []
 
         for formatter in Formatter.all:
@@ -79,8 +79,7 @@ class FormatPickerFrame(tk.Frame):
                 self,
                 text=formatter.name,
                 variable=self.formatter,
-                value=formatter.name,
-                command=self.master.refresh)
+                value=formatter.name)
             rad.pack(side=tk.LEFT)
             self._rad_ls.append(rad)
         self._rad_ls[0].select()
@@ -92,16 +91,17 @@ class RegisterFileFrame(tk.Frame):
         super().__init__(*args, **kwargs)
         self.frm_format_picker = FormatPickerFrame(self)
         self.frm_format_picker.grid(row=0, columnspan=n_cols)
+        self.frm_format_picker.formatter.trace_add("write", self.refresh)
         widgets = []
         for i in range(n_rows):
             for j in range(n_cols):
                 widget = RegisterFrame(registers[i + n_rows * j], self)
-                widget.grid(row=i + 1, column=j)
+                widget.grid(row=i + 1, column=j, sticky=tk.E)
                 widgets.append(widget)
         self._widgets = widgets
         self.refresh()
 
-    def refresh(self):
+    def refresh(self, *args):
         for widget in self._widgets:
             widget.refresh()
 
@@ -117,6 +117,7 @@ class FlashFrame(tk.Frame):
 
         self.frm_format_picker = FormatPickerFrame(self)
         self.frm_format_picker.pack(side=tk.TOP)
+        self.frm_format_picker.formatter.trace_add("write", self.refresh)
 
         self.listbox = tk.Listbox(self)
         self.listbox.config(font="TkFixedFont")
@@ -157,12 +158,11 @@ class FlashFrame(tk.Frame):
             self.listbox.insert(i, f"{i:8d} : "
                 + format_spec.format(self._flash[i]))
 
-        self.listbox.itemconfigure(self._PC.val, background="grey")
-
-    def refresh(self):
+    def refresh(self, *args):
         self.update_inview()
         self.listbox.see(self._PC.val)
         self.listbox.itemconfigure(self._prev_select, background="")
+        self.listbox.itemconfigure(self._PC.val, background="grey")
         self._prev_select = self._PC.val
 
 
@@ -173,7 +173,7 @@ class AVRSimTk(tk.Tk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.machine = Machine()
+        self.machine = Machine(win=self)
 
         self.title("AVR Zero")
 
@@ -206,36 +206,38 @@ class AVRSimTk(tk.Tk):
             self.frm_toolbar, text="Reset", command=self.reset)
         self.btn_reset.pack(side=tk.RIGHT)
 
-        self.frm_main = tk.Frame()
-        self.frm_main.pack(fill=tk.Y, expand=True)
+        self.frm_main = tk.Frame(self)
+        self.frm_main.pack(fill=tk.BOTH, expand=True)
 
         self.txt_code = CodeText(self.frm_main)
         self.txt_code.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
         self.frm_machine = tk.Frame(self.frm_main)
-        self.frm_machine.pack(fill=tk.BOTH, side=tk.LEFT)
+        self.frm_machine.pack(fill=tk.Y, side=tk.LEFT, expand=True)
+        self.frm_machine.rowconfigure(0, weight=1)
+        self.frm_machine.rowconfigure(1, weight=1)
 
         self.frm_gpr = RegisterFileFrame(
             self.machine.R, 16, 2, self.frm_machine)
-        self.frm_gpr.pack(side=tk.LEFT, anchor=tk.N)
+        self.frm_gpr.grid(row=0, column=0, sticky=tk.N + tk.S)
 
         self.frm_spr = RegisterFileFrame(
             [self.machine.X, self.machine.Y, self.machine.Z,
              self.machine.SP, self.machine.SREG, self.machine.PC],
             3, 2, self.frm_machine)
-        self.frm_spr.pack(side=tk.LEFT, anchor=tk.N)
+        self.frm_spr.grid(row=1, column=0, sticky=tk.N + tk.S)
 
         self.frm_stack = FlashFrame(self.machine.SP,
                                     self.machine.memory,
                                     BYTE_SIZE,
                                     self.frm_machine)
-        self.frm_stack.pack(fill=tk.Y, side=tk.LEFT)
+        self.frm_stack.grid(row=0, column=1, sticky=tk.N + tk.S)
 
         self.frm_flash = FlashFrame(self.machine.PC,
                                     self.machine.flash,
                                     WORD_SIZE,
                                     self.frm_machine)
-        self.frm_flash.pack(fill=tk.Y, side=tk.LEFT)
+        self.frm_flash.grid(row=1, column=1, sticky=tk.N + tk.S)
 
         self.lab_msg = tk.Label(self,
                                 text="No message.",
@@ -292,15 +294,11 @@ class AVRSimTk(tk.Tk):
 
     def reset(self):
         self.machine.reset()
-        self.frm_gpr.refresh()
-        self.frm_spr.refresh()
         self.frm_stack.refresh()
         self.frm_flash.refresh()
 
     def step(self):
         self.machine.step()
-        self.frm_gpr.refresh()
-        self.frm_spr.refresh()
         self.frm_stack.refresh()
         self.frm_flash.refresh()
 

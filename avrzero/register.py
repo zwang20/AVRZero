@@ -1,18 +1,25 @@
 from random import randint
+from tkinter import _get_default_root
 
 from avrzero import BYTE_SIZE, WORD_SIZE
+
+if _get_default_root is not None:
+    from tkinter import IntVar
+else:
+    from avrzero.variable import IntVar
+del _get_default_root
 
 
 class Register:
 
     N_BITS = BYTE_SIZE
 
-    def __init__(self, name=None, addr=None, val=None):
+    def __init__(self, name=None, addr=None, val=None, win=None):
         self._name = name
         self._addr = addr
         if val is None:
             val = randint(0, (1 << self.N_BITS) - 1)
-        self.val = val
+        self._val = IntVar(master=win, value=val, name=name)
 
     def __repr__(self):
         if self.addr is None:
@@ -43,11 +50,11 @@ class Register:
 
     @property
     def val(self):
-        return self._val
+        return self._val.get()
 
     @val.setter
     def val(self, val):
-        self._val = val % (1 << self.N_BITS)
+        self._val.set(val % (1 << self.N_BITS))
 
     def __getitem__(self, idx):
         return (self.val & (1 << idx)) >> idx
@@ -59,6 +66,9 @@ class Register:
 
     def __format__(self, format_spec):
         return self.val.__format__(format_spec)
+
+    def trace_add(self, mode, callback):
+        self._val.trace_add(mode, callback)
 
 
 class PointerRegister(Register):
@@ -94,6 +104,11 @@ class PointerRegister(Register):
         r1, r2 = self._pair
         r1.val = val >> r2.N_BITS
         r2.val = val & ((1 << r2.N_BITS) - 1)
+
+    def trace_add(self, mode, callback):
+        r1, r2 = self._pair
+        r1._val.trace_add(mode, callback)
+        r2._val.trace_add(mode, callback)
 
 
 class StatusRegister(Register):

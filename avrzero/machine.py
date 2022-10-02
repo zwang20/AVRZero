@@ -7,14 +7,14 @@ from avrzero.register import Register, PointerRegister, StatusRegister
 class Machine:
 
     def __init__(self, RAMEND=0xFFFF, flash_size=0x10000,
-                 instruction_set=InstructionSet.default):
+                 instruction_set=InstructionSet.default, win=None):
         # === Data Memory ===
         self.RAMEND = RAMEND
         self.memory = []
         for addr in range(32):
-            self.memory.append(Register(name=f"R{addr}", addr=addr))
+            self.memory.append(Register(name=f"R{addr}", addr=addr, win=win))
         for addr in range(32, RAMEND + 1):
-            self.memory.append(Register(addr=addr))
+            self.memory.append(Register(addr=addr, win=win))
 
         # general purpose registers
         self.R = self.general_registers = self.memory[0x00:0x20]
