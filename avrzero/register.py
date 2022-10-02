@@ -1,6 +1,6 @@
 from random import randint
 
-from avrzero.instruction import BYTE_SIZE
+from avrzero import BYTE_SIZE, WORD_SIZE
 
 
 class Register:
@@ -63,7 +63,7 @@ class Register:
 
 class PointerRegister(Register):
 
-    N_BITS = BYTE_SIZE * 2
+    N_BITS = WORD_SIZE
 
     def __init__(self, name=None, pair=None):
         pair = tuple(pair)

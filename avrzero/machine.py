@@ -1,5 +1,6 @@
+from avrzero import BYTE_SIZE
 from avrzero.error import AVRMachineError
-from avrzero.instruction import BYTE_SIZE, InstructionSet
+from avrzero.instruction import InstructionSet
 from avrzero.register import Register, PointerRegister, StatusRegister
 
 

@@ -3,9 +3,9 @@ import os
 import tkinter.filedialog
 import tkinter as tk
 
+from avrzero import BYTE_SIZE, WORD_SIZE
 from avrzero.assembler import Assembler
 from avrzero.formatter import Formatter
-from avrzero.instruction import BYTE_SIZE, WORD_SIZE
 from avrzero.machine import Machine
 
 

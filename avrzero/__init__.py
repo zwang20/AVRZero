@@ -7,3 +7,6 @@ __all__ = [
 ]
 
 __package__ = "avrzero"
+
+BYTE_SIZE = 8
+WORD_SIZE = BYTE_SIZE * 2

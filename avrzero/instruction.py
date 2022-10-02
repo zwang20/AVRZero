@@ -1,10 +1,7 @@
 from functools import cache, cached_property
 
+from avrzero import BYTE_SIZE, WORD_SIZE
 from avrzero.error import AVRSyntaxError
-
-
-BYTE_SIZE = 8
-WORD_SIZE = 16
 
 
 class Syntax:
