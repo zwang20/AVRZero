@@ -55,10 +55,10 @@ class RegisterFrame(tk.Frame):
 
     def validate(self):
         try:
-            self._register.val = int(self.ent_val.get(),
-                                     base=self.get_format().base)
+            converter = self.get_format().converter
+            self._register.val = converter(self.ent_val.get())
             self.winfo_toplevel().show_message(f"{self._register.name} saved")
-        except ValueError as err:
+        except (TypeError, ValueError) as err:
             self.winfo_toplevel().show_message(str(err))
         self.refresh()
 
@@ -70,9 +70,9 @@ class RegisterFrame(tk.Frame):
             background="systemTextBackgroundColor"))
 
     def refresh(self, *args):
-        format_spec = self.get_format().format_spec(self._register.N_BITS)
         self.ent_val.delete(0, tk.END)
-        self.ent_val.insert(0, format_spec.format(self._register.val))
+        self.ent_val.insert(0, self.get_format().format(
+            self._register.val, n_bits=self._register.N_BITS))
         if args:
             self.blink_entry()
 
@@ -149,11 +149,10 @@ class FlashFrame(tk.Frame):
 
     def update_line(self, idx):
         val = self._flash[idx].get()
-        format_spec = Formatter.by_name(
-            self.frm_format_picker.formatter.get()).format_spec(self._n_bits)
+        formatter = Formatter.by_name(self.frm_format_picker.formatter.get())
         line = "{:<{}d} | {}".format(idx,
                                      self._idx_len,
-                                     format_spec.format(val))
+                                     formatter.format(val, self._n_bits))
 
         if line != self.listbox.get(idx):
             self.listbox.delete(idx)
@@ -161,12 +160,11 @@ class FlashFrame(tk.Frame):
             self.update_highlight()
 
     def refresh(self, *args):
-        format_spec = Formatter.by_name(
-            self.frm_format_picker.formatter.get()).format_spec(self._n_bits)
+        formatter = Formatter.by_name(self.frm_format_picker.formatter.get())
         self.listbox.delete(0, tk.END)
         for i, cell in enumerate(self._flash):
             self.listbox.insert(tk.END, "{:<{}d} | {}".format(
-                i, self._idx_len, format_spec.format(cell.get())))
+                i, self._idx_len, formatter.format(cell.get(), self._n_bits)))
         self.update_highlight()
 
     def update_highlight(self, *args):
