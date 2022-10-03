@@ -60,12 +60,12 @@ class Machine:
         return "\n".join(lines)
 
     def _push_stack(self, val):
-        self.SP.val -= 1
         self.memory[self.SP.val].val = val
+        self.SP.val -= 1
 
     def _pop_stack(self):
-        val = self.memory[self.SP.val].val
         self.SP.val += 1
+        val = self.memory[self.SP.val].val
         return val
 
     def push_stack(self, val, n_byte=1):
