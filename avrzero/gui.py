@@ -65,7 +65,7 @@ class RegisterFrame(tk.Frame):
     def blink_entry(self):
         self.ent_val.configure(background="grey")
         if self._blink is not None:
-            self.after_cancel(self._blink)
+            self.ent_val.after_cancel(self._blink)
         self._blink = self.ent_val.after(500, lambda: self.ent_val.configure(
             background="systemTextBackgroundColor"))
 
