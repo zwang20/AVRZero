@@ -194,8 +194,8 @@ class AVRSimTk(tk.Tk):
         for file_name in os.listdir(self.EXAMPLE_DIR):
             name = os.path.splitext(file_name)[0].replace("_", " ").title()
             path = os.path.join(self.EXAMPLE_DIR, file_name)
-            menu_example.add_command(label=name,
-                                     command=lambda: self.file_open(path))
+            menu_example.add_command(
+                label=name, command=lambda path=path: self.file_open(path))
         menu_file.add_cascade(label="Example", menu=menu_example)
 
         self.menu.add_cascade(label="File", menu=menu_file)
