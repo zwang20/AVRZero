@@ -1,4 +1,7 @@
 # AVR Zero
+
+[![PyPI](https://img.shields.io/pypi/v/avrzero?&style=flat-square)][PyPI]
+
 A simple AVR instruction set IDE and simulator for educational purposes.
 
 > **Warning**
@@ -44,3 +47,5 @@ The artifacts will be in the `dist` directory. Install with
 ```
 python -m pip install --no-deps dist/avrsim-*-py3-none-any.whl
 ```
+
+[PyPI]: https://pypi.org/project/avrzero/
