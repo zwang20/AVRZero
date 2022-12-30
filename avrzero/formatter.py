@@ -23,10 +23,10 @@ class Formatter:
             string = self._format_spec.format(value, width)
         else:
             string = self._format_spec.format(value)
-        if string.isprintable():
-            return string
-        else:
+
+        if not string.isprintable():
             return self.NON_PRINTING
+        return string
 
     @property
     def converter(self):

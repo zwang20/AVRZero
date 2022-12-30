@@ -87,8 +87,8 @@ class Machine:
 
     def load_program(self, program):
         program = program[:self.flash_size]
-        for i in range(len(program)):
-            self.flash[i].set(program[i])
+        for i, code in enumerate(program):
+            self.flash[i].set(code)
         for i in range(len(program), self.flash_size):
             self.flash[i].set(0)
 

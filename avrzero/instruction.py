@@ -4,6 +4,20 @@ from avrzero import BYTE_SIZE, WORD_SIZE
 from avrzero.error import AVRSyntaxError
 
 
+def binary_mask(code, select):
+    mask = 0
+    for i, bit in enumerate(code[::-1]):
+        if bit in select:
+            mask |= 1 << i
+
+    return mask
+
+
+@cache
+def mask_char(string, char):
+    return binary_mask(string, char)
+
+
 class Syntax:
 
     def __init__(self, tokens):
@@ -121,8 +135,10 @@ class Operand:
         choices = self._choices
         if isinstance(choices, range):
             return f"{choices.start} <= {name} < {choices.stop}"
-        elif isinstance(choices, set):
+        if isinstance(choices, set):
             return f"{name} ∈ {set}"
+
+        return "?"
 
     def check(self, value):
         return value in self._choices
@@ -148,15 +164,14 @@ class Opcode:
 
     @cached_property
     def fixed_mask(self):
-        return self.binary_mask(self._str, "01")
+        return binary_mask(self._str, "01")
 
     @cached_property
     def fixed(self):
-        return self.binary_mask(self._str, "1")
+        return binary_mask(self._str, "1")
 
-    @cache
     def mask_char(self, char):
-        return self.binary_mask(self._str, char)
+        return mask_char(self._str, char)
 
     def map_operands(self, operand_map):
         mapped = self.fixed
@@ -185,14 +200,6 @@ class Opcode:
 
         return operand_map
 
-    @staticmethod
-    def binary_mask(code, select):
-        mask = 0
-        for i, bit in enumerate(code[::-1]):
-            if bit in select:
-                mask |= 1 << i
-
-        return mask
 
     @staticmethod
     def map_int(integer, mask):
@@ -211,7 +218,6 @@ class Opcode:
     def get_int(mapped, mask):
         bit_len = mask.bit_length() - 1
         integer = 0
-        weight = 0
         while bit_len >= 0:
             if mask & (1 << bit_len):
                 integer <<= 1
@@ -297,8 +303,7 @@ class Instruction:
         for operand in operands:
             if operand.name in seen_operand_names:
                 raise ValueError("duplicate operand names")
-            else:
-                seen_operand_names.append(operand.name)
+            seen_operand_names.append(operand.name)
 
         def decorator(action):
             instruction = cls(action,
@@ -348,6 +353,8 @@ class InstructionSet:
             if (instruction.opcode.fixed_mask & opcode ==
                     instruction.opcode.fixed):
                 return instruction
+
+        return None
 
 
 InstructionSet.default = InstructionSet("default")

@@ -1,6 +1,5 @@
 import math
 import os
-import tkinter.filedialog
 import tkinter as tk
 
 from avrzero import BYTE_SIZE, WORD_SIZE
@@ -111,7 +110,7 @@ class RegisterFileFrame(tk.Frame):
         self._widgets = widgets
         self.refresh()
 
-    def refresh(self, *args):
+    def refresh(self, *_):
         for widget in self._widgets:
             widget.refresh()
 
@@ -267,7 +266,7 @@ class AVRSimTk(tk.Tk):
 
     def file_open(self, file_name):
         try:
-            with open(file_name) as file:
+            with open(file_name, encoding="utf-8") as file:
                 self.txt_code.replace("0.0", "end", file.read())
         except OSError as err:
             self.show_message(str(err))
@@ -281,7 +280,7 @@ class AVRSimTk(tk.Tk):
             return
 
         try:
-            with open(file_name, "w") as file:
+            with open(file_name, "w", encoding="utf-8") as file:
                 file.write(self.txt_code.get("0.0", "end"))
         except OSError as err:
             tk.messagebox.showerror(
