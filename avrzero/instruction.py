@@ -42,14 +42,21 @@ class Syntax:
         operand_map = {}
         for token in self._tokens:
             if isinstance(token, Operand):
+                negative = False
                 num_str = ""
+                if string and string[0] == "-":
+                    string = string[1:]
+                    negative = True
                 while string and string[0].isdigit():
                     num_str += string[0]
                     string = string[1:]
                 if not num_str:
                     raise AVRSyntaxError(f"expect digits before {string!r}",
                                          obj=self)
-                operand_map[token.name] = int(num_str)
+                num = int(num_str)
+                if negative:
+                    num = -num
+                operand_map[token.name] = num
             elif token == " ":
                 if not string or not string[0].isspace():
                     raise AVRSyntaxError(f"expect space before {string!r}",
