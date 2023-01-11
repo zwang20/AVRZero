@@ -45,8 +45,7 @@ class Register:
     def addr_str(self):
         if self.addr is None:
             return "0x????"
-        else:
-            return f"0x{self.addr:04X}"
+        return f"0x{self.addr:04X}"
 
     @property
     def val(self):
@@ -113,8 +112,8 @@ class PointerRegister(Register):
 
     def trace_add(self, mode, callback):
         r1, r2 = self._pair
-        r1._val.trace_add(mode, callback)
-        r2._val.trace_add(mode, callback)
+        r1.trace_add(mode, callback)
+        r2.trace_add(mode, callback)
 
 
 class StatusRegister(Register):
