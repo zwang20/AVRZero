@@ -865,6 +865,17 @@ def ret(machine):
 # TODO: Make everything in between
 
 @Instruction.make(
+    syntax="SWAP Rd",
+    operands=(Operand("d", range(0, 32)),),
+    opcode="1001" "010d" "dddd" "0010",
+)
+def swap(machine, d):
+    Rd = machine.R[d]
+    Rd.val = ((Rd.val & 0b00001111) << 4) | ((Rd.val & 0b11110000) >> 4)
+    machine.PC.val += 1
+
+
+@Instruction.make(
     syntax="TST Rd",
     operands=(Operand("d", range(0, 32)),),
     opcode="0010" "00dd" "dddd" "dddd",
