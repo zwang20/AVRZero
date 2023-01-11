@@ -45,7 +45,7 @@ python -m build
 The artifacts will be in the `dist` directory. Install with
 
 ```
-python -m pip install --no-deps dist/avrsim-*-py3-none-any.whl
+python -m pip install --no-deps dist/avrzero-*-py3-none-any.whl
 ```
 
 [PyPI]: https://pypi.org/project/avrzero/
