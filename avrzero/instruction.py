@@ -2,7 +2,6 @@ from functools import cache, cached_property
 
 from avrzero.error import AVRSyntaxError
 
-
 BYTE_SIZE = 8
 WORD_SIZE = 16
 
@@ -80,7 +79,7 @@ class Syntax:
             tokens.append(token)
 
         missing = set(operands) \
-                - set(filter(lambda obj: isinstance(obj, Operand), tokens))
+                  - set(filter(lambda obj: isinstance(obj, Operand), tokens))
         if missing:
             missing_names = ", ".join(map(lambda operand: operand.name,
                                           missing))
@@ -315,7 +314,6 @@ class Instruction:
 
 
 class InstructionSet:
-
     default = None
 
     def __init__(self, name):
@@ -373,6 +371,7 @@ def adc(machine, d, r):
 
     machine.PC.val += 1
 
+
 @Instruction.make(
     syntax="ADD Rd, Rr",
     operands=(Operand("d", range(0, 32)),
@@ -394,6 +393,7 @@ def add(machine, d, r):
 
     machine.PC.val += 1
 
+
 @Instruction.make(
     syntax="BCLR s",
     operands=(Operand("s", range(0, 8)),),
@@ -403,15 +403,17 @@ def bclr(machine, s):
     machine.SREG[s] = 0
     machine.PC.val += 1
 
+
 @Instruction.make(
     syntax="CALL k",
     operands=(Operand("k", range(0, 64_000)),),
     opcode="1001" "010k" "kkkk" "111k"
-    "kkkk" "kkkk" "kkkk" "kkkk"
+           "kkkk" "kkkk" "kkkk" "kkkk"
 )
 def call(machine, k):
     machine.push_stack(machine.PC.val + 2, 2)
     machine.PC.val = k
+
 
 @Instruction.make(
     syntax="LD Rd, X",
@@ -420,6 +422,7 @@ def call(machine, k):
 )
 def ld(machine, d):
     machine.R[d].val = machine.R[machine.X.val].val
+
 
 @Instruction.make(
     syntax="LD Rd, X+",
@@ -430,6 +433,7 @@ def ld_post_inc(machine, d):
     machine.R[d].val = machine.R[machine.X.val].val
     machine.X.val += 1
 
+
 @Instruction.make(
     syntax="LD Rd, -X",
     operands=(Operand("d", range(0, 32)),),
@@ -438,6 +442,7 @@ def ld_post_inc(machine, d):
 def ld_pre_dec(machine, d):
     machine.X.val -= 1
     machine.R[d].val = machine.R[machine.X.val].val
+
 
 @Instruction.make(
     syntax="LDI Rd, k",
@@ -449,6 +454,7 @@ def ldi(machine, d, k):
     machine.R[d].val = k
     machine.PC.val += 1
 
+
 @Instruction.make(
     syntax="NOP",
     operands=(),
@@ -456,6 +462,7 @@ def ldi(machine, d, k):
 )
 def nop(machine):
     machine.PC.val += 1
+
 
 @Instruction.make(
     syntax="POP Rd",
@@ -466,6 +473,7 @@ def pop(machine, d):
     machine.R[d].val = machine.pop_stack()
     machine.PC.val += 1
 
+
 @Instruction.make(
     syntax="PUSH Rd",
     operands=(Operand("d", range(0, 32)),),
@@ -474,6 +482,7 @@ def pop(machine, d):
 def push(machine, d):
     machine.push_stack(machine.R[d].val)
     machine.PC.val += 1
+
 
 @Instruction.make(
     syntax="RET",

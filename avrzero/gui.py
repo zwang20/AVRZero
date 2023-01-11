@@ -107,9 +107,9 @@ class FlashFrame(tk.Frame):
 
     def refresh(self):
         self.listbox.delete(0, tk.END)
-        for i in range(2**8):
+        for i in range(2 ** 8):
             self.listbox.insert(tk.END, f"{i:8d} : "
-                + self.frm_format_picker.format.get().format(self._flash[i]))
+                                + self.frm_format_picker.format.get().format(self._flash[i]))
 
 
 class AVRSimTk(tk.Tk):

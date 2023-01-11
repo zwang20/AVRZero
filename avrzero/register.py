@@ -4,7 +4,6 @@ from avrzero.instruction import BYTE_SIZE
 
 
 class Register:
-
     N_BITS = BYTE_SIZE
 
     def __init__(self, name=None, addr=None, val=None):
@@ -59,7 +58,6 @@ class Register:
 
 
 class PointerRegister(Register):
-
     N_BITS = BYTE_SIZE * 2
 
     def __init__(self, name=None, pair=None):
@@ -94,7 +92,6 @@ class PointerRegister(Register):
 
 
 class StatusRegister(Register):
-
     BIT_NAMES = (("C", "Carry flag"),
                  ("Z", "Zero flag"),
                  ("N", "Negative flag"),
@@ -105,7 +102,7 @@ class StatusRegister(Register):
                  ("I", "Interrupt flag"))
 
     @classmethod
-    def from_(cls ,reg):
+    def from_(cls, reg):
         reg._name = "status register"
         reg.__class__ = cls
         return reg
