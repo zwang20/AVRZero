@@ -36,13 +36,6 @@ python -m avrzero
 
 First, you need to clone the GitHub repository.
 
-Then, install dependencies
-
-```sh
-pip install tk
-pip install build
-```
-
 At the project root, run
 
 ```sh
