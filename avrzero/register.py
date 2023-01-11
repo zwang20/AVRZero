@@ -1,17 +1,25 @@
 from random import randint
+from tkinter import _get_default_root
 
-from avrzero.instruction import BYTE_SIZE
+from avrzero import BYTE_SIZE, WORD_SIZE
+
+if _get_default_root is not None:
+    from tkinter import IntVar
+else:
+    from avrzero.variable import IntVar
+del _get_default_root
 
 
 class Register:
+
     N_BITS = BYTE_SIZE
 
-    def __init__(self, name=None, addr=None, val=None):
+    def __init__(self, name=None, addr=None, val=None, win=None):
         self._name = name
         self._addr = addr
         if val is None:
             val = randint(0, (1 << self.N_BITS) - 1)
-        self.val = val
+        self._val = IntVar(master=win, value=val, name=name)
 
     def __repr__(self):
         if self.addr is None:
@@ -37,16 +45,21 @@ class Register:
     def addr_str(self):
         if self.addr is None:
             return "0x????"
-        else:
-            return f"0x{self.addr:04X}"
+        return f"0x{self.addr:04X}"
 
     @property
     def val(self):
-        return self._val
+        return self._val.get()
 
     @val.setter
     def val(self, val):
-        self._val = val % (1 << self.N_BITS)
+        self._val.set(val % (1 << self.N_BITS))
+
+    def get(self):
+        return self.val
+
+    def set(self, value):
+        self.val = value
 
     def __getitem__(self, idx):
         return (self.val & (1 << idx)) >> idx
@@ -56,9 +69,16 @@ class Register:
         self.val &= ~(1 << idx)
         self.val |= bit << idx
 
+    def __format__(self, format_spec):
+        return self.val.__format__(format_spec)
+
+    def trace_add(self, mode, callback):
+        self._val.trace_add(mode, callback)
+
 
 class PointerRegister(Register):
-    N_BITS = BYTE_SIZE * 2
+
+    N_BITS = WORD_SIZE
 
     def __init__(self, name=None, pair=None):
         pair = tuple(pair)
@@ -90,8 +110,14 @@ class PointerRegister(Register):
         r1.val = val >> r2.N_BITS
         r2.val = val & ((1 << r2.N_BITS) - 1)
 
+    def trace_add(self, mode, callback):
+        r1, r2 = self._pair
+        r1.trace_add(mode, callback)
+        r2.trace_add(mode, callback)
+
 
 class StatusRegister(Register):
+
     BIT_NAMES = (("C", "Carry flag"),
                  ("Z", "Zero flag"),
                  ("N", "Negative flag"),
@@ -102,7 +128,7 @@ class StatusRegister(Register):
                  ("I", "Interrupt flag"))
 
     @classmethod
-    def from_(cls, reg):
+    def from_(cls ,reg):
         reg._name = "status register"
         reg.__class__ = cls
         return reg

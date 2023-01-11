@@ -1,15 +1,21 @@
+from avrzero import BYTE_SIZE
 from avrzero.error import AVRMachineError
-from avrzero.instruction import BYTE_SIZE, InstructionSet
+from avrzero.instruction import InstructionSet
 from avrzero.register import Register, PointerRegister, StatusRegister
+from avrzero.variable import IntVar
 
 
 class Machine:
 
     def __init__(self, RAMEND=0xFFFF, flash_size=0x10000,
-                 instruction_set=InstructionSet.default):
+                 instruction_set=InstructionSet.default, win=None):
         # === Data Memory ===
         self.RAMEND = RAMEND
-        self.memory = [Register(addr=addr) for addr in range(RAMEND + 1)]
+        self.memory = []
+        for addr in range(32):
+            self.memory.append(Register(name=f"R{addr}", addr=addr, win=win))
+        for addr in range(32, RAMEND + 1):
+            self.memory.append(Register(addr=addr, win=win))
 
         # general purpose registers
         self.R = self.general_registers = self.memory[0x00:0x20]
@@ -27,7 +33,7 @@ class Machine:
 
         # === Program Memory ===
         self.flash_size = flash_size
-        self.flash = [0x00] * flash_size
+        self.flash = [IntVar(win, 0x0000) for _ in range(self.flash_size)]
 
         self.PC = PointerRegister("program counter", (Register(), Register()))
 
@@ -54,12 +60,12 @@ class Machine:
         return "\n".join(lines)
 
     def _push_stack(self, val):
-        self.SP.val -= 1
         self.memory[self.SP.val].val = val
+        self.SP.val -= 1
 
     def _pop_stack(self):
-        val = self.memory[self.SP.val].val
         self.SP.val += 1
+        val = self.memory[self.SP.val].val
         return val
 
     def push_stack(self, val, n_byte=1):
@@ -80,15 +86,17 @@ class Machine:
         self.PC.val = 0x0000
 
     def load_program(self, program):
-        self.flash[:] = [0x00] * len(self.flash)
-        program = program[:len(self.flash)]
-        self.flash[:len(program)] = program
+        program = program[:self.flash_size]
+        for i, code in enumerate(program):
+            self.flash[i].set(code)
+        for i in range(len(program), self.flash_size):
+            self.flash[i].set(0)
 
     def step(self):
-        opcode = self.flash[self.PC.val:self.PC.val + 1]
+        opcode = [*map(IntVar.get, self.flash[self.PC.val:self.PC.val + 1])]
         instruction = self.instruction_set.by_opcode(opcode)
         if instruction is None:
-            opcode = self.flash[self.PC.val:self.PC.val + 2]
+            opcode = [*map(IntVar.get, self.flash[self.PC.val:self.PC.val + 2])]
             instruction = self.instruction_set.by_opcode(opcode)
         if instruction is None:
             return

@@ -69,14 +69,14 @@ _Do not forget to add `.val` when getting and setting machine register values._
 The flash of a machine stores a program. A program is represented by a
 collection of `int` objects.
 
-- To load a program, use `load_program`.
+- To load a program, use `Machine.load_program`.
 
 # Make Your Own Instruction
 
 Below is an example of the implementation of AVR instruction in this project.
 You can find all implemented instructions in `instruction.py`.
 
-```
+```python
 @Instruction.make(
     syntax="ADC Rd, Rr",
     operands=(Operand("d", range(0, 32)),
@@ -85,16 +85,17 @@ You can find all implemented instructions in `instruction.py`.
 )
 def adc(machine, d, r):
     Rd, Rr = machine.R[d], machine.R[r]
-    R = SREG = machine.SREG
+    SREG = machine.SREG
+    R = Register()
 
-    val = Rd.val + Rr.val + SREG.C
+    R.val = Rd.val + Rr.val + SREG.C
     SREG.H = Rd[3] and Rr[3] or Rr[3] and not R[3] and not R[3] and Rd[3]
     SREG.V = Rd[7] and Rr[7] and not R[7] or not Rd[7] and not Rr[7] and R[7]
-    SREG.S = SREG.N != SREG.V
     SREG.N = R[7]
     SREG.Z = not R
     SREG.C = Rd[7] and Rr[7] or Rr[7] and not R[7] or not R[7] and Rd[7]
-    Rd.val = val
+    SREG.S = SREG.N != SREG.V
+    Rd.val = R.val
 
     machine.PC.val += 1
 ```
@@ -124,7 +125,7 @@ need other sequences (such as `range(0, 8, 2)`), use a `set` instead (like so
 **`opcode`**
 
 The opcode of an instruction should be a Python `str` that is either one word
-(16) or two words long. For readability, we separate the string by length of
+(16 bits) or two words long. For readability, we separate the string by length of
 four as in the example.
 
 **`belong_to`** Optional

@@ -12,7 +12,7 @@ parser.add_argument("file")
 args = parser.parse_args()
 
 with open(args.file, "r") as asm_file:
-    asm_source = file.read()
+    asm_source = asm_file.read()
 
 assembler = Assembler(asm_source)
 machine = Machine()
