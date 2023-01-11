@@ -16,19 +16,19 @@ A simple AVR instruction set IDE and simulator for educational purposes.
 
 The project is available on PyPI, simply install it with `pip`.
 
-```
+```sh
 python -m pip install avrzero
 ```
 
 Then, you can run the graphics user interface with
 
-```
+```sh
 python -m avrzero.gui
 ```
 
 Or you can run the command line tools with
 
-```
+```sh
 python -m avrzero
 ```
 
@@ -38,14 +38,14 @@ First, you need to clone the GitHub repository.
 
 At the project root, run
 
-```
+```sh
 python -m build
 ```
 
 The artifacts will be in the `dist` directory. Install with
 
-```
-python -m pip install --no-deps dist/avrsim-*-py3-none-any.whl
+```sh
+python -m pip install --no-deps dist/avrzero-*-py3-none-any.whl
 ```
 
 [PyPI]: https://pypi.org/project/avrzero/
