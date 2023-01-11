@@ -413,6 +413,88 @@ def add(machine, d, r):
     machine.PC.val += 1
 
 @Instruction.make(
+    syntax="ADIW R:d, k",
+    operands=(Operand("d", {24, 26, 28, 30}),
+              Operand("k", range(0, 64))),
+    opcode="1001" "0110" "kkdd" "kkkk"
+)
+def adiw(machine, d, k):
+    Rdl, Rdh = machine.R[d:d+2]
+    Rd = PointerRegister(pair=[Rdh, Rdl])
+    SREG = machine.SREG
+    R = PointerRegister(pair=[Register(), Register()])
+
+    R.val = Rd.val + k
+    SREG.V = not Rdh[7] and R[15]
+    SREG.N = R[15]
+    SREG.Z = not R
+    SREG.C = not R[15] and Rdh[7]
+    SREG.S = SREG.N != SREG.V
+    Rd.val = R.val
+
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="AND Rd, Rr",
+    operands=(Operand("d", range(0, 32)),
+              Operand("r", range(0, 32))),
+    opcode="0010" "00rd" "dddd" "rrrr"
+)
+def and_(machine, d, r):
+    Rd, Rr = machine.R[d], machine.R[r]
+    SREG = machine.SREG
+    R = Register()
+
+    R.val = Rd.val & Rr.val
+    SREG.V = 0
+    SREG.N = R[7]
+    SREG.Z = not R
+    SREG.S = SREG.N != SREG.V
+    Rd.val = R.val
+
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="ANDI Rd, k",
+    operands=(Operand("d", range(0, 32)),
+              Operand("k", range(0, 256))),
+    opcode="0111" "kkkk" "dddd" "kkkk"
+)
+def andi(machine, d, k):
+    Rd = machine.R[d]
+    SREG = machine.SREG
+    R = Register()
+
+    R.val = Rd.val & k
+    SREG.V = 0
+    SREG.N = R[7]
+    SREG.Z = not R
+    SREG.S = SREG.N != SREG.V
+    Rd.val = R.val
+
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="ASR Rd",
+    operands=(Operand("d", range(0, 32)),),
+    opcode="1001" "010d" "dddd" "0101"
+)
+def asr(machine, d):
+    Rd = machine.R[d]
+    SREG = machine.SREG
+    R = Register()
+
+    R.val = Rd.val & (1 << 7) | Rd.val >> 1
+    SREG.N = R[7]
+    SREG.Z = not R
+    SREG.C = Rd[0]
+    SREG.S = SREG.N != SREG.V
+    SREG.V = SREG.N != SREG.C
+    Rd.val = R.val
+
+    machine.PC.val += 1
+
+@Instruction.make(
     syntax="BCLR s",
     operands=(Operand("s", range(0, 8)),),
     opcode="1001" "0100" "1sss" "1000"
@@ -422,14 +504,255 @@ def bclr(machine, s):
     machine.PC.val += 1
 
 @Instruction.make(
+    syntax="BLD Rd, b",
+    operands=(Operand("d", range(0, 32)),
+              Operand("b", range(0, 8))),
+    opcode="1111" "100d" "dddd" "0bbb"
+)
+def bld(machine, d, b):
+    machine.R[d][b] = machine.SREG.T
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRBC s, k",
+    operands=(Operand("s", range(0, 8)),
+              Operand("k", range(-64, 64))),
+    opcode="1111" "01kk" "kkkk" "ksss"
+)
+def brbc(machine, s, k):
+    if machine.SREG[s] == 0:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRBS s, k",
+    operands=(Operand("s", range(0, 8)),
+              Operand("k", range(-64, 64))),
+    opcode="1111" "00kk" "kkkk" "ksss"
+)
+def brbs(machine, s, k):
+    if machine.SREG[s] == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRCC k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "01kk" "kkkk" "k000"
+)
+def brcc(machine, k):
+    if machine.SREG.C == 0:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRCS k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k000"
+)
+def brcs(machine, k):
+    if machine.SREG.C == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BREQ k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k001"
+)
+def breq(machine, k):
+    if machine.SREG.Z == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRGE k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k100"
+)
+def brge(machine, k):
+    if machine.SREG.S == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRHC k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "01kk" "kkkk" "k101"
+)
+def brhc(machine, k):
+    if machine.SREG.H == 0:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRHS k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k101"
+)
+def brhs(machine, k):
+    if machine.SREG.H == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRID k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "01kk" "kkkk" "k111"
+)
+def brid(machine, k):
+    if machine.SREG.I == 0:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRIE k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k111"
+)
+def brie(machine, k):
+    if machine.SREG.I == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRLO k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k000"
+)
+def brlo(machine, k):
+    if machine.SREG.C == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRLT k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k100"
+)
+def brlt(machine, k):
+    if machine.SREG.S == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRMI k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k010"
+)
+def brmi(machine, k):
+    if machine.SREG.N == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRNE k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "01kk" "kkkk" "k001"
+)
+def brne(machine, k):
+    if machine.SREG.Z == 0:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRPL k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "01kk" "kkkk" "k010"
+)
+def brpl(machine, k):
+    if machine.SREG.N == 0:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRSH k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "01kk" "kkkk" "k000"
+)
+def brsh(machine, k):
+    if machine.SREG.C == 0:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRTC k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "01kk" "kkkk" "k110"
+)
+def brtc(machine, k):
+    if machine.SREG.T == 0:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRTS k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k110"
+)
+def brts(machine, k):
+    if machine.SREG.T == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRVC k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "01kk" "kkkk" "k011"
+)
+def brvc(machine, k):
+    if machine.SREG.V == 0:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BRVS k",
+    operands=(Operand("k", range(-64, 64)),),
+    opcode="1111" "00kk" "kkkk" "k011"
+)
+def brvs(machine, k):
+    if machine.SREG.V == 1:
+        machine.PC.val += k
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BSET s",
+    operands=(Operand("s", range(0, 8)),),
+    opcode="1001" "0100" "0sss" "1000"
+)
+def bset(machine, s):
+    machine.SREG[s] = 1
+    machine.PC.val += 1
+
+@Instruction.make(
+    syntax="BST Rd, b",
+    operands=(Operand("d", range(0, 32)),
+              Operand("b", range(0, 8))),
+    opcode="1111" "101d" "dddd" "0bbb"
+)
+def bst(machine, d, b):
+    machine.SREG.T = machine.R[d][b]
+    machine.PC.val += 1
+
+@Instruction.make(
     syntax="CALL k",
     operands=(Operand("k", range(0, 64_000)),),
-    opcode="1001" "010k" "kkkk" "111k"
-    "kkkk" "kkkk" "kkkk" "kkkk"
+    opcode=("1001" "010k" "kkkk" "111k"
+            "kkkk" "kkkk" "kkkk" "kkkk")
 )
 def call(machine, k):
     machine.push_stack(machine.PC.val + 2, 2)
     machine.PC.val = k
+
+@Instruction.make(
+    syntax="CBI a, b",
+    operands=(Operand("a", range(0, 32)),
+              Operand("b", range(0, 8))),
+    opcode="1001" "1000" "aaaa" "abbb"
+)
+def cbi(machine, a, b):
+    machine.IOR[a][b] = 0
+    machine.PC.val += 1
 
 @Instruction.make(
     syntax="LD Rd, X",
