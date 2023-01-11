@@ -860,3 +860,27 @@ def push(machine, d):
 )
 def ret(machine):
     machine.PC.val = machine.pop_stack(2)
+
+
+# TODO: Make everything in between
+
+@Instruction.make(
+    syntax="TST Rd",
+    operands=(Operand("d", range(0, 32)),),
+    opcode="0010" "00dd" "dddd" "dddd",
+)
+def tst(machine, d):
+    Rd = machine.R[d]
+    SREG = machine.SREG
+    R = Register()
+
+    R.val = Rd.val & Rd.val
+    SREG.V = 0
+    SREG.N = R[7]
+    SREG.Z = not R
+    SREG.S = SREG.N != SREG.V
+    Rd.val = R.val
+
+    machine.PC.val += 1
+# TODO: Make WDR
+# TODO: Make XCH
